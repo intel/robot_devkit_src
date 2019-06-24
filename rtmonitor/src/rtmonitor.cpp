@@ -81,12 +81,21 @@ bool RealTimeMonitor::init(std::string id)
   return true;
 }
 
+bool RealTimeMonitor::init(rclcpp::Node::SharedPtr node, std::string id)
+{
+  if (!init(id)) {
+    return false;
+  }
+
+  rtm_client_ = std::make_shared<RtmClient>(node);
+  // Check if client created successfully
+  return true;
+}
+
 bool RealTimeMonitor::init(
   std::string id, uint32_t rate, uint32_t jitter_margin,
   std::function<void(int iter_num, rclcpp::Duration looptime)> cb)
 {
-  int ret;
-
   if (!init(id)) {
     return false;
   }
@@ -113,15 +122,17 @@ bool RealTimeMonitor::init(
   return true;
 }
 
-bool RealTimeMonitor::init(rclcpp::Node::SharedPtr node, std::string id)
+bool RealTimeMonitor::init(
+  rclcpp::Node::SharedPtr node, std::string id, uint32_t rate, uint32_t jitter_margin,
+  std::function<void(int iter_num, rclcpp::Duration looptime)> cb)
 {
-  int ret;
-
-  if (!init(id)) {
+  if (!init(id, rate, jitter_margin, cb)) {
     return false;
   }
 
   rtm_client_ = std::make_shared<RtmClient>(node);
+  // Check if client created successfully
+  return true;
 }
 
 bool RealTimeMonitor::deinit(std::string id)
@@ -167,9 +178,10 @@ rclcpp::Duration RealTimeMonitor::calc_looptime(std::string id, rclcpp::Time now
     }
   }
 
-  // Check if client is created
   // Call the client API
-  rtm_client_->request_looptime();
+  if (rtm_client_) {
+    rtm_client_->request_looptime();
+  }
 
   rtd->prev_looptime_ = now;
   rtd->iter_cnt_++;

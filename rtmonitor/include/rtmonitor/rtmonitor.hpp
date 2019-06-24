@@ -49,6 +49,14 @@ public:
    */
   bool init(std::string id);
 
+  /**
+   *  Initialize to publish RT metrics.
+   *
+   *  @param[in] node Node Pointer.
+   *  @param[in] id Identifier.
+   *
+   *  @return Status of request.
+   */
   bool init(rclcpp::Node::SharedPtr node, std::string id);
 
   /**
@@ -64,6 +72,22 @@ public:
   bool init(
     std::string id, uint32_t rate, uint32_t jitter_margin,
     std::function<void(int iter_num, rclcpp::Duration looptime)> cb);
+
+  /**
+   *  Initialize to produce callback on missed deadlines and publish RT metrics.
+   *
+   *  @param[in] node Node Pointer.
+   *  @param[in] id Identifier.
+   *  @param[in] rate Rate set for loop.
+   *  @param[in] jitter_margin Deviation acceptable in percentage.
+   *  @param[in] cb Callback to be called on missed deadlines.
+   *
+   *  @return Status of request.
+   */
+  bool init(
+    rclcpp::Node::SharedPtr node, std::string id, uint32_t rate, uint32_t jitter_margin,
+    std::function<void(int iter_num, rclcpp::Duration looptime)> cb);
+
 
   /**
    *  Deinitialize.
