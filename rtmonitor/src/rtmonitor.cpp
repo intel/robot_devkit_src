@@ -14,10 +14,11 @@
 
 #include <sys/resource.h>
 
-#include <rtmonitor/rtmonitor.hpp>
-
 #include <string>
 #include <map>
+#include <memory>
+
+#include "rtmonitor/rtmonitor.hpp"
 
 namespace rtmonitor
 {
@@ -112,6 +113,17 @@ bool RealTimeMonitor::init(
   return true;
 }
 
+bool RealTimeMonitor::init(rclcpp::Node::SharedPtr node, std::string id)
+{
+  int ret;
+
+  if (!init(id)) {
+    return false;
+  }
+
+  rtm_client_ = std::make_shared<RtmClient>(node);
+}
+
 bool RealTimeMonitor::deinit(std::string id)
 {
   // TODO(lbegani): Remove the id/data from the map
@@ -155,10 +167,12 @@ rclcpp::Duration RealTimeMonitor::calc_looptime(std::string id, rclcpp::Time now
     }
   }
 
+  // Check if client is created
+  // Call the client API
+  rtm_client_->request_looptime();
+
   rtd->prev_looptime_ = now;
   rtd->iter_cnt_++;
-
-  // rtm_pub_.publish_looptime();
 
   return looptime;
 }

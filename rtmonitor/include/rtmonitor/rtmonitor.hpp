@@ -19,9 +19,11 @@
 
 #include <string>
 #include <map>
+#include <memory>
 
 #include "rclcpp/rclcpp.hpp"
 #include "rtmonitor/rtm_data.hpp"
+#include "rtmonitor/rtm_client.hpp"
 #include "rtmonitor_msgs/msg/loop_time.hpp"
 #include "builtin_interfaces/msg/time.hpp"
 
@@ -46,6 +48,8 @@ public:
    *  @return Status of request.
    */
   bool init(std::string id);
+
+  bool init(rclcpp::Node::SharedPtr node, std::string id);
 
   /**
    *  Initialize.
@@ -112,6 +116,7 @@ private:
   int publish_looptime(RtmData * rtd);
 
   std::map<std::string, RtmData *> rtd_map_;
+  std::shared_ptr<RtmClient> rtm_client_;
 };
 
 }  // namespace rtmonitor

@@ -17,11 +17,22 @@ find_package(rclcpp REQUIRED)
 find_package(rtmonitor_msgs REQUIRED)
 
 include_directories(include)
-add_library(rtmonitor SHARED src/rtmonitor.cpp)
+
+add_library(rtmonitor SHARED src/rtmonitor.cpp src/rtm_client.cpp)
 ament_target_dependencies(rtmonitor
   rclcpp
   rtmonitor_msgs
 )
+
+add_executable(rtm_service
+  src/rtm_service.cpp
+  src/rtm_publisher.cpp)
+
+ament_target_dependencies(rtm_service
+  "rclcpp"
+  "rtmonitor"
+  "rtmonitor_msgs"
+  "std_msgs")
 
 install(
   DIRECTORY include/
@@ -29,9 +40,10 @@ install(
 )
 
 install(
-  TARGETS rtmonitor
+  TARGETS rtmonitor rtm_service
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
 ament_export_include_directories(include)
