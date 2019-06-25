@@ -27,7 +27,7 @@ class RtmData
 {
 public:
   RtmData()
-  : iter_cnt_(0), prev_looptime_(0, 0), acceptable_looptime_(0, 0) {}
+  : iter_cnt_(0), prev_looptime_(0, 0), acceptable_looptime_(0, 0), current_looptime_(0, 0) {}
   ~RtmData() {}
   bool init_;
   uint32_t iter_cnt_;
@@ -37,6 +37,7 @@ public:
 
   rclcpp::Time prev_looptime_;
   rclcpp::Duration acceptable_looptime_;
+  rclcpp::Duration current_looptime_;
 
   rclcpp::Time elapsed_start;
   rclcpp::Time elapsed_stop;

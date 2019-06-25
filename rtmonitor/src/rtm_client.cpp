@@ -43,16 +43,16 @@ bool RtmClient::create_client_looptime(rclcpp::Node::SharedPtr node)
   return true;
 }
 
-bool RtmClient::request_looptime()
+bool RtmClient::request_looptime(RtmData * rtd)
 {
   auto request = std::make_shared<rtmonitor_msgs::srv::ReqLoopTime::Request>();
   // request->header.stamp = rclcpp::now();
   request->req.topic = "test_event";
   request->req.pub = true;
-  request->req.rate = 10;
-  request->req.jitter = 5;
-  request->req.iteration = 7;
-  request->req.looptime = 0;
+  request->req.rate = rtd->rate_;
+  request->req.jitter = rtd->jitter_margin_;
+  request->req.iteration = rtd->iter_cnt_;
+  request->req.looptime = rtd->current_looptime_.nanoseconds();
 
   auto result_future = loop_time_client_->async_send_request(request);
 

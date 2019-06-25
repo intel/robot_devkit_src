@@ -178,9 +178,11 @@ rclcpp::Duration RealTimeMonitor::calc_looptime(std::string id, rclcpp::Time now
     }
   }
 
+  rtd->current_looptime_ = looptime;
+
   // Call the client API
   if (rtm_client_) {
-    rtm_client_->request_looptime();
+    rtm_client_->request_looptime(rtd);
   }
 
   rtd->prev_looptime_ = now;

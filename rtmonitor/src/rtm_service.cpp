@@ -57,6 +57,7 @@ void RtmService::handle_looptime(
 {
   RCLCPP_INFO(get_logger(), "handle_looptime");
   rtmonitor_msgs::msg::LoopTime msg;
+  msg.header.stamp = this->now();
   msg.topic = req->req.topic;
   msg.pub = req->req.pub;
   msg.rate = req->req.rate;
