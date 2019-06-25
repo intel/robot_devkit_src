@@ -44,12 +44,12 @@ public:
   ~Producer() {}
   void init()
   {
-    rtm_.init(shared_from_this(), "producer");
+    rtm_.init(shared_from_this(), "producer2");
   }
   void produce_message()
   {
     // Measure looptime
-    rtm_.calc_looptime("producer", this->now());
+    rtm_.calc_looptime("producer2", this->now());
     std_msgs::msg::String::UniquePtr msg(new std_msgs::msg::String());
     msg->data = "RT Message: " + std::to_string(count_++);
     RCLCPP_INFO(this->get_logger(), "Producer: [%s]", msg->data.c_str());
@@ -72,7 +72,7 @@ int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
 
-  auto producer = std::make_shared<Producer>("rtm_prod1");
+  auto producer = std::make_shared<Producer>("rtm_prod2");
   producer->init();
 
   rclcpp::spin(producer);

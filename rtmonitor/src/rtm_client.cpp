@@ -47,7 +47,7 @@ bool RtmClient::request_looptime(RtmData * rtd)
 {
   auto request = std::make_shared<rtmonitor_msgs::srv::ReqLoopTime::Request>();
   // request->header.stamp = rclcpp::now();
-  request->req.topic = "test_event";
+  request->req.topic = rtd->event_id_;
   request->req.pub = true;
   request->req.rate = rtd->rate_;
   request->req.jitter = rtd->jitter_margin_;

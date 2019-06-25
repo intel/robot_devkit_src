@@ -15,8 +15,6 @@
 #ifndef RTMONITOR__RTM_DATA_HPP_
 #define RTMONITOR__RTM_DATA_HPP_
 
-#pragma once
-
 #include <iostream>
 #include <chrono>
 #include <functional>
@@ -27,11 +25,12 @@ class RtmData
 {
 public:
   RtmData()
-  : iter_cnt_(0), prev_looptime_(0, 0), acceptable_looptime_(0, 0), current_looptime_(0, 0) {}
+  : rate_(0), iter_cnt_(0), prev_looptime_(0, 0), acceptable_looptime_(0, 0), current_looptime_(0, 0) {}
   ~RtmData() {}
   bool init_;
-  uint32_t iter_cnt_;
+  std::string event_id_;
   uint32_t rate_;
+  uint32_t iter_cnt_;
   uint32_t jitter_margin_;
   std::function<void(int, rclcpp::Duration)> overrun_cb_;
 

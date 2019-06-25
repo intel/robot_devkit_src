@@ -73,6 +73,7 @@ bool RealTimeMonitor::init(std::string id)
     printf("Error: Could not open log file");
   }
 
+  rtd->event_id_ = id;
   rtd->prev_looptime_ = rclcpp::Time(0, 0);
   rtd->init_ = true;
 
