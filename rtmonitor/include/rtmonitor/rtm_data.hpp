@@ -18,6 +18,7 @@
 #include <iostream>
 #include <chrono>
 #include <functional>
+#include <string>
 
 namespace rtmonitor
 {
@@ -25,7 +26,8 @@ class RtmData
 {
 public:
   RtmData()
-  : rate_(0), iter_cnt_(0), prev_looptime_(0, 0), acceptable_looptime_(0, 0), current_looptime_(0, 0) {}
+  : rate_(0), iter_cnt_(0), prev_looptime_(0, 0), acceptable_looptime_(0, 0),
+    current_looptime_(0, 0) {}
   ~RtmData() {}
   bool init_;
   std::string event_id_;
