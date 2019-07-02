@@ -26,24 +26,23 @@ class RtmData
 {
 public:
   RtmData()
-  : rate_(0), iter_cnt_(0), prev_looptime_(0, 0), acceptable_looptime_(0, 0),
-    current_looptime_(0, 0) {}
+  : init_(false), max_perf_time_(0, 0), min_perf_time_(0, 0),
+    iter_cnt_(0), start_perf_time_(0, 0), stop_perf_time_(0, 0),
+    perf_time_(0, 0) {}
   ~RtmData() {}
+
   bool init_;
   std::string event_id_;
-  uint32_t rate_;
-  uint32_t iter_cnt_;
-  uint32_t jitter_margin_;
   std::function<void(int, rclcpp::Duration)> overrun_cb_;
-
-  rclcpp::Time prev_looptime_;
-  rclcpp::Duration acceptable_looptime_;
-  rclcpp::Duration current_looptime_;
-
-  rclcpp::Time elapsed_start;
-  rclcpp::Time elapsed_stop;
-
   FILE * log_file_;
+
+  rclcpp::Duration max_perf_time_;
+  rclcpp::Duration min_perf_time_;
+
+  uint32_t iter_cnt_;
+  rclcpp::Time start_perf_time_;
+  rclcpp::Time stop_perf_time_;
+  rclcpp::Duration perf_time_;
 };
 
 }  // namespace rtmonitor

@@ -55,6 +55,8 @@ RealTimeMonitor::~RealTimeMonitor()
     if (it->second->log_file_) {
       fclose(it->second->log_file_);
     }
+
+    delete it->second;
   }
 
   // TODO(lbegani): Delete the RtmData structs.
@@ -66,6 +68,8 @@ bool RealTimeMonitor::init(std::string id)
 
   RtmData * rtd = new RtmData();
 
+  rtd->event_id_ = id;
+
   // TODO(lbegani): Check if file exists
   std::string filename = "/tmp/log_" + id + ".txt";
   rtd->log_file_ = fopen(filename.c_str(), "w");
@@ -73,9 +77,7 @@ bool RealTimeMonitor::init(std::string id)
     printf("Error: Could not open log file");
   }
 
-  rtd->event_id_ = id;
-  rtd->prev_looptime_ = rclcpp::Time(0, 0);
-  rtd->init_ = true;
+  rtd->init_ = false;
 
   rtd_map_[id] = rtd;
 
@@ -110,15 +112,21 @@ bool RealTimeMonitor::init(
     return false;
   }
 
-  rtd->rate_ = rate;
-  rtd->jitter_margin_ = jitter_margin;
+  // rtd->rate_ = rate;
+  // rtd->jitter_margin_ = jitter_margin;
+
   rtd->overrun_cb_ = cb;
+
   uint32_t looptime_ns = 1000000000 / rate;
   uint32_t jitter_ns = (looptime_ns * jitter_margin) / 100;
-  uint32_t desired_looptime_ns = looptime_ns + jitter_ns;
-  rtd->acceptable_looptime_ = rclcpp::Duration(0, desired_looptime_ns);
+  uint32_t max_looptime_ns = looptime_ns + jitter_ns;
+  uint32_t min_looptime_ns = looptime_ns - jitter_ns;
+  // rtd->acceptable_looptime_ = rclcpp::Duration(0, desired_looptime_ns);
+  rtd->max_perf_time_ = rclcpp::Duration(0, max_looptime_ns);
+  rtd->min_perf_time_ = rclcpp::Duration(0, min_looptime_ns);
+
   fprintf(rtd->log_file_, "Desired looptime:%ld ns \n",
-    long(rtd->acceptable_looptime_.nanoseconds()));
+    long(rtd->max_perf_time_.nanoseconds()));
 
   return true;
 }
@@ -163,30 +171,32 @@ rclcpp::Duration RealTimeMonitor::calc_looptime(std::string id, rclcpp::Time now
   }
 */
 
-  if (!rtd->init_) {
-    looptime = now - rtd->prev_looptime_;
+  rtd->stop_perf_time_ = now;
+
+  if (rtd->init_) {
+    looptime = rtd->stop_perf_time_ - rtd->start_perf_time_;
   } else {
-    rtd->init_ = false;
+    rtd->init_ = true;
   }
 
   // fprintf(rtd->log_file_, "Iteration: %d ", rtd->iter_cnt_);
   print_duration(rtd->log_file_, rtd->iter_cnt_, looptime);
 
   if (rtd->overrun_cb_) {
-    if (looptime > rtd->acceptable_looptime_) {
+    if (looptime > rtd->max_perf_time_) {
       rtd->overrun_cb_(rtd->iter_cnt_, looptime);
       print_metrics(rtd->log_file_);
     }
   }
 
-  rtd->current_looptime_ = looptime;
+  rtd->perf_time_ = looptime;
 
   // Call the client API
   if (rtm_client_) {
     rtm_client_->request_looptime(rtd);
   }
 
-  rtd->prev_looptime_ = now;
+  rtd->start_perf_time_ = now;
   rtd->iter_cnt_++;
 
   return looptime;
@@ -228,12 +238,12 @@ rclcpp::Duration RealTimeMonitor::calc_elapsed(std::string id, bool is_start, rc
   }
 
   if (is_start) {
-    rtd->elapsed_start = now;
+    rtd->start_perf_time_ = now;
   } else {
-    rtd->elapsed_stop = now;
+    rtd->stop_perf_time_ = now;
 
     // TODO(lbegani): Check if elapsed_start < elapsed_stop.
-    elapsed = rtd->elapsed_stop - rtd->elapsed_start;
+    elapsed = rtd->stop_perf_time_ - rtd->start_perf_time_;
 
     print_duration(rtd->log_file_, rtd->iter_cnt_, elapsed);
     rtd->iter_cnt_++;

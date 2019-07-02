@@ -50,7 +50,16 @@ public:
   bool init(std::string id);
 
   /**
-   *  Initialize to publish RT metrics.
+   *  Initialize with upper and lower limits.
+   *
+   *  @param[in] id Identifier.
+   *
+   *  @return Status of request.
+   */
+  // bool init(std::string id, rclcpp::Duration max, rclcpp::Duration min);
+
+  /**
+   *  Initialize to publish RT metrics on ROS2 topic.
    *
    *  @param[in] node Node Pointer.
    *  @param[in] id Identifier.
@@ -60,7 +69,17 @@ public:
   bool init(rclcpp::Node::SharedPtr node, std::string id);
 
   /**
-   *  Initialize.
+   *  Initialize to publish RT metrics on ROS2 topic.
+   *
+   *  @param[in] node Node Pointer.
+   *  @param[in] id Identifier.
+   *
+   *  @return Status of request.
+   */
+  // bool init(rclcpp::Node::SharedPtr node, std::string id, rclcpp::Duration max, rclcpp::Duration min);
+
+  /**
+   *  Initialize to receive callback on missed deadlines.
    *
    *  @param[in] id Identifier.
    *  @param[in] rate Rate set for loop.
@@ -74,7 +93,7 @@ public:
     std::function<void(int iter_num, rclcpp::Duration looptime)> cb);
 
   /**
-   *  Initialize to produce callback on missed deadlines and publish RT metrics.
+   *  Initialize to receive callback on missed deadlines and publish RT metrics.
    *
    *  @param[in] node Node Pointer.
    *  @param[in] id Identifier.

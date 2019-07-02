@@ -49,10 +49,10 @@ bool RtmClient::request_looptime(RtmData * rtd)
   // request->header.stamp = rclcpp::now();
   request->req.topic = rtd->event_id_;
   request->req.pub = true;
-  request->req.rate = rtd->rate_;
-  request->req.jitter = rtd->jitter_margin_;
+  request->req.rate = 0;
+  request->req.jitter = 0;
   request->req.iteration = rtd->iter_cnt_;
-  request->req.looptime = rtd->current_looptime_.nanoseconds();
+  request->req.looptime = rtd->perf_time_.nanoseconds();
 
   auto result_future = loop_time_client_->async_send_request(request);
 
