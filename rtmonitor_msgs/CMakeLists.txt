@@ -9,6 +9,7 @@ find_package(std_msgs REQUIRED)
 
 rosidl_generate_interfaces(rtmonitor_msgs
   "msg/LoopTime.msg"
+  "msg/RtmVector.msg"
   "srv/ReqLoopTime.srv"
   DEPENDENCIES builtin_interfaces std_msgs
 )
