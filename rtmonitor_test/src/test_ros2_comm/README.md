@@ -18,25 +18,25 @@ test_ros2_comm is a tool built to test and capture performance metrics of ROS2 C
   * Inter: Sender and Receiver in two separate process running in one single system	
   * Intra: Sender and Receiver running in same Process	
 
-## 2. Dependencies
+## 4. Dependencies
 * ROS2
 
-## 3. Getting Started
-### 3.1 Fetch
+## 5. Getting Started
+### 5.1 Fetch
 ```console
 $ mkdir -p ~/rtmonitor_ws/src
 $ cd ~/rtmonitor_ws/src
 $ git clone <rtmonitor>
 
 ```
-### 3.2 Build
+### 5.2 Build
 ```console
 $ source ~/ros2_ws/install/local_setup.bash
 $ cd ~/rtmonitor_ws
 $ colcon build --symlink-install
 
 ```
-### 3.3 Test
+### 5.3 Test
 Test ROS2 communication between two systems with default configurations
 ```console
 In System 1
@@ -51,7 +51,7 @@ $ cd ~/rtmonitor_ws
 $ source ./install/local_setup.bash
 $ ros2 run rtmonitor_test test_ros2_comm -m pong
 ```
-### 3.4 Analyze
+### 5.4 Analyze
 Log files will be generated in the /tmp directory. Python script can be used to create a plot of timing metrics to analyze
 ```console
 $ cd ~/rtmonitor_ws/src/rtmonitor/rtmonitor_tools
