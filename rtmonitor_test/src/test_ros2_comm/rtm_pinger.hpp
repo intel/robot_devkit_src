@@ -29,6 +29,7 @@
 #include "std_msgs/msg/header.hpp"
 #include "rtmonitor/rtmonitor.hpp"
 #include "rtmonitor_msgs/msg/rtm_vector.hpp"
+#include "qos_profile.hpp"
 
 
 using namespace std::chrono_literals;
@@ -42,10 +43,14 @@ public:
     RCLCPP_INFO(this->get_logger(), "RtmPinger");
   }
 
-  RtmPinger(std::vector<std::string> topic_index_list, uint32_t rate, uint32_t len)
+  RtmPinger(
+    std::vector<std::string> topic_index_list, uint32_t test_dur, uint32_t qos_cfg,
+    uint32_t rate, uint32_t len)
   : Node("rtmpinger")
   {
     RCLCPP_INFO(this->get_logger(), "RtmPinger");
+    test_dur_ = test_dur;
+    qos_cfg_ = qos_cfg;
     pub_rate_ = rate;
     msg_len_ = len;
 
@@ -63,7 +68,8 @@ public:
     rtm_.init("msg_RTT");
 
     // TODO(lbegani): make qos configurable
-    rclcpp::QoS qos(rclcpp::KeepLast(7));
+    // rclcpp::QoS qos(rclcpp::KeepLast(3));
+    auto qos = getQosConfig(qos_cfg_);
 
     std::string ping_topic = "rtm_ping" + topic_index;
     std::string pong_topic = "rtm_pong" + topic_index;
@@ -84,10 +90,20 @@ public:
     timer_ =
       this->create_wall_timer(std::chrono::milliseconds(period_ms),
         std::bind(&RtmPinger::ping_message, this));
+
+    // Run the test for specified amount of time
+    test_timer_ =
+      this->create_wall_timer(std::chrono::milliseconds(test_dur_ * 60 * 1000),
+        [this]() {
+          RCLCPP_INFO(this->get_logger(), "Stop the test, output the results");
+          this->stop();
+          this->test_timer_->cancel();
+        });
   }
   void stop()
   {
     // stop the timer
+    this->timer_->cancel();
   }
   void ping_message()
   {
@@ -126,7 +142,10 @@ private:
   rclcpp::Publisher<rtmonitor_msgs::msg::RtmVector>::SharedPtr pub_;
   rclcpp::Subscription<rtmonitor_msgs::msg::RtmVector>::SharedPtr sub_;
   rclcpp::TimerBase::SharedPtr timer_;
+  rclcpp::TimerBase::SharedPtr test_timer_;
   uint64_t index_ = 1;
+  uint32_t test_dur_;
+  uint32_t qos_cfg_;
   uint32_t pub_rate_;
   uint32_t msg_len_;
   std::vector<std::string> topic_list_;

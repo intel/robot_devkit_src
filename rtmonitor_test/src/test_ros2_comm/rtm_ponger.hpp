@@ -33,11 +33,13 @@ public:
     create_sub_pub("1");
   }
 
-  explicit RtmPonger(std::vector<std::string> topic_index_list)
+  explicit RtmPonger(std::vector<std::string> topic_index_list, uint32_t qos_cfg)
   : Node("rtmponger")
   {
     // TODO(lbegani): Parse topic indexes from input list
     (void)(topic_index_list);
+
+    qos_cfg_ = qos_cfg;
     create_sub_pub("1");
   }
 
@@ -56,7 +58,8 @@ public:
 
     // create publisher
     // TODO(lbegani): make qos configurable
-    rclcpp::QoS qos(rclcpp::KeepLast(7));
+    // rclcpp::QoS qos(rclcpp::KeepLast(7));
+    auto qos = getQosConfig(qos_cfg_);
     pub_ = this->create_publisher<rtmonitor_msgs::msg::RtmVector>(pong_topic, qos);
 
     return true;
@@ -75,6 +78,7 @@ public:
 private:
   rclcpp::Publisher<rtmonitor_msgs::msg::RtmVector>::SharedPtr pub_;
   rclcpp::Subscription<rtmonitor_msgs::msg::RtmVector>::SharedPtr sub_;
+  uint32_t qos_cfg_;
 };
 
 #endif  // TEST_ROS2_COMM__RTM_PONGER_HPP_
