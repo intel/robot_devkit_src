@@ -15,34 +15,78 @@
 #ifndef TEST_ROS2_COMM__QOS_PROFILE_HPP_
 #define TEST_ROS2_COMM__QOS_PROFILE_HPP_
 
+#include <chrono>
+
 #include "rclcpp/rclcpp.hpp"
 
-#define QOS_CONFIG_DEFAULT 0
-#define QOS_CONFIG_LARGE_DATA 1
-#define QOS_CONFIG_BEST_EFFORT 2
-#define QOS_CONFIG_RELIABLE 3
+#define QOS_DEFAULT             0
+#define QOS_KEEP_ALL            1
+#define QOS_KEEP_LAST           2
+#define QOS_RELIABLE            3
+#define QOS_BEST_EFFORT         4
+#define QOS_DURABILITY_VOLATILE 5
+#define QOS_TRANSIENT_LOCAL     6
+#define QOS_LIVELINESS          7
+#define QOS_LIFESPAN            8
+#define QOS_DEADLINE            9
+#define QOS_LARGE_DATA          10
+
+using namespace std::chrono_literals;
 
 rclcpp::QoS
 getQosConfig(const uint32_t qos_cfg)
 {
-  printf("header function\n");
-  rclcpp::QoS qos(rclcpp::KeepLast(3));
+  printf("QoS Config:%d \n", qos_cfg);
+  rclcpp::QoS qos(rclcpp::KeepLast(10));
+  std::chrono::milliseconds duration = 1s;
   switch (qos_cfg) {
-    case QOS_CONFIG_DEFAULT:
+    case QOS_KEEP_ALL:
+      qos.keep_all();
+      break;
+    case QOS_KEEP_LAST:
+      qos.keep_last(10);
+      break;
+    case QOS_RELIABLE:
+      qos.reliable();
+      break;
+    case QOS_BEST_EFFORT:
+      qos.best_effort();
+      break;
+    case QOS_DURABILITY_VOLATILE:
+      qos.durability_volatile();
+      break;
+    case QOS_TRANSIENT_LOCAL:
+      qos.transient_local();
+      break;
+    case QOS_LIVELINESS:
+      // const std::chrono::milliseconds lease_duration = 1s;
+      duration = 1s;
+      qos.liveliness(RMW_QOS_POLICY_LIVELINESS_AUTOMATIC);
+      qos.liveliness_lease_duration(duration);
+      break;
+    case QOS_LIFESPAN:
+      // std::chrono::milliseconds lifespan_duration = 10ms;
+      duration = 10ms;
+      qos
+      .reliable()
+      .transient_local()
+      .lifespan(duration);
+      break;
+    case QOS_DEADLINE:
+      // std::chrono::milliseconds deadline_duration = 10ms;
+      duration = 10ms;
+      qos.deadline(duration);
+      break;
+    case QOS_DEFAULT:
       qos = qos.keep_last(3);
       qos = qos.reliable();
       break;
-    case QOS_CONFIG_LARGE_DATA:
+    case QOS_LARGE_DATA:
       qos = qos.keep_last(3);
       break;
-    case QOS_CONFIG_BEST_EFFORT:
-      qos = qos.keep_last(1);
-      qos = qos.best_effort();
-      break;
-    case QOS_CONFIG_RELIABLE:
-      qos = qos.keep_all();
+    default:
+      qos = qos.keep_last(3);
       qos = qos.reliable();
-      break;
   }
 
   return qos;
