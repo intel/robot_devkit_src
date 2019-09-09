@@ -30,7 +30,6 @@ add_executable(rtm_service
 
 ament_target_dependencies(rtm_service
   "rclcpp"
-  "rtmonitor"
   "rtmonitor_msgs"
   "std_msgs")
 
