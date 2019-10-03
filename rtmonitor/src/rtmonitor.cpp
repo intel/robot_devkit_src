@@ -91,7 +91,18 @@ bool RealTimeMonitor::init(rclcpp::Node::SharedPtr node, std::string id)
   }
 
   rtm_client_ = std::make_shared<RtmClient>(node);
-  // Check if client created successfully
+  // TODO(lbegani): Check if client created successfully
+  return true;
+}
+
+bool RealTimeMonitor::init(rclcpp_lifecycle::LifecycleNode::SharedPtr lc_node, std::string id)
+{
+  if (!init(id)) {
+    return false;
+  }
+
+  rtm_client_ = std::make_shared<RtmClient>(lc_node);
+  // TODO(lbegani): Check if client created successfully
   return true;
 }
 

@@ -18,6 +18,7 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_lifecycle REQUIRED)
 find_package(rmw REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(rtmonitor REQUIRED)
@@ -34,6 +35,7 @@ add_executable(test_rtmonitor
 
 ament_target_dependencies(test_rtmonitor
   "rclcpp"
+  "rclcpp_lifecycle"
   "rtmonitor"
   "rtmonitor_msgs"
   "std_msgs")
@@ -43,6 +45,7 @@ add_executable(test_looptime
 
 ament_target_dependencies(test_looptime
   "rclcpp"
+  "rclcpp_lifecycle"
   "rtmonitor"
   "rtmonitor_msgs"
   "std_msgs")
@@ -52,6 +55,7 @@ add_executable(test_latency
 
 ament_target_dependencies(test_latency
   "rclcpp"
+  "rclcpp_lifecycle"
   "rtmonitor"
   "rtmonitor_msgs"
   "std_msgs")
@@ -61,6 +65,7 @@ add_executable(test_elapsed
 
 ament_target_dependencies(test_elapsed
   "rclcpp"
+  "rclcpp_lifecycle"
   "rtmonitor"
   "rtmonitor_msgs"
   "std_msgs")
@@ -70,6 +75,7 @@ add_executable(test_client_server
 
 ament_target_dependencies(test_client_server
   "rclcpp"
+  "rclcpp_lifecycle"
   "rtmonitor"
   "rtmonitor_msgs"
   "std_msgs")
@@ -79,6 +85,7 @@ add_executable(test_client_server2
 
 ament_target_dependencies(test_client_server2
   "rclcpp"
+  "rclcpp_lifecycle"
   "rtmonitor"
   "rtmonitor_msgs"
   "std_msgs")
@@ -88,6 +95,7 @@ add_executable(test_elapsed_global
 
 ament_target_dependencies(test_elapsed_global
   "rclcpp"
+  "rclcpp_lifecycle"
   "rtmonitor"
   "rtmonitor_msgs"
   "std_msgs")
@@ -97,6 +105,7 @@ add_executable(test_ros2_comm
 
 ament_target_dependencies(test_ros2_comm
   "rclcpp"
+  "rclcpp_lifecycle"
   "rtmonitor"
   "rtmonitor_msgs"
   "std_msgs")

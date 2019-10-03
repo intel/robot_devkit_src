@@ -26,6 +26,11 @@ RtmClient::RtmClient(rclcpp::Node::SharedPtr node)
   create_client_elapsed(node);
 }
 
+RtmClient::RtmClient(rclcpp_lifecycle::LifecycleNode::SharedPtr lc_node)
+{
+  lc_create_client_elapsed(lc_node);
+}
+
 RtmClient::~RtmClient()
 {
 }
@@ -84,6 +89,21 @@ bool RtmClient::create_client_elapsed(rclcpp::Node::SharedPtr node)
       return false;
     }
     RCLCPP_INFO(node->get_logger(), "waiting for elapsed service to appear...");
+  }
+
+  return true;
+}
+
+bool RtmClient::lc_create_client_elapsed(rclcpp_lifecycle::LifecycleNode::SharedPtr lc_node)
+{
+  elapsed_client_ = lc_node->create_client<rtmonitor_msgs::srv::ReqElapsed>("elapsed");
+
+  while (!elapsed_client_->wait_for_service(std::chrono::seconds(1))) {
+    if (!rclcpp::ok()) {
+      RCLCPP_ERROR(lc_node->get_logger(), "client interrupted while waiting for elapsed service to appear.");
+      return false;
+    }
+    RCLCPP_INFO(lc_node->get_logger(), "waiting for elapsed service to appear...");
   }
 
   return true;

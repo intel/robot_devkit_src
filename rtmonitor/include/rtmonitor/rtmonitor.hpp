@@ -22,6 +22,7 @@
 #include <memory>
 
 #include "rclcpp/rclcpp.hpp"
+#include "rclcpp_lifecycle/lifecycle_node.hpp"
 #include "rtmonitor/rtm_data.hpp"
 #include "rtmonitor/rtm_client.hpp"
 #include "rtmonitor_msgs/msg/loop_time.hpp"
@@ -68,6 +69,16 @@ public:
    *  @return Status of request.
    */
   bool init(rclcpp::Node::SharedPtr node, std::string id);
+
+  /**
+   *  Initialize for inter-process performance metrics for lifecycle node.
+   *
+   *  @param[in] lc_node LifecycleNode Pointer.
+   *  @param[in] id Identifier.
+   *
+   *  @return Status of request.
+   */
+  bool init(rclcpp_lifecycle::LifecycleNode::SharedPtr lc_node, std::string id);
 
   /**
    *  Initialize to publish RT metrics on ROS2 topic.
