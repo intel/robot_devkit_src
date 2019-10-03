@@ -25,6 +25,7 @@
 #include "rtmonitor/rtm_data.hpp"
 #include "rtmonitor/rtm_client.hpp"
 #include "rtmonitor_msgs/msg/loop_time.hpp"
+#include "rtmonitor_msgs/msg/elapsed.hpp"
 #include "builtin_interfaces/msg/time.hpp"
 
 namespace rtmonitor
@@ -150,6 +151,17 @@ public:
    *  @return Elapsed time in rclcpp::Duration.
    */
   rclcpp::Duration calc_elapsed(std::string id, bool is_start, rclcpp::Time now);
+
+  /**
+   *  Calculate time elapsed between two point in different processes.
+   *
+   *  @param[in] id Identifier.
+   *  @param[in] is_start Flag to specify if start point or end point.
+   *  @param[in] now Current Time.
+   *
+   *  @return Status of request.
+   */
+  bool calc_elapsed_g(std::string id, bool is_start, rclcpp::Time now);
 
 private:
   void print_duration(FILE * log_file_, uint32_t iter, rclcpp::Duration dur) const;

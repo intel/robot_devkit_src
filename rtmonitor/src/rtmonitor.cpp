@@ -253,4 +253,16 @@ rclcpp::Duration RealTimeMonitor::calc_elapsed(std::string id, bool is_start, rc
   return elapsed;
 }
 
+bool RealTimeMonitor::calc_elapsed_g(std::string id, bool is_start, rclcpp::Time now)
+{
+  bool ret = false;
+
+  // Call the client API
+  if (rtm_client_) {
+    ret = rtm_client_->request_elapsed(id, is_start, now);
+  }
+
+  return ret;
+}
+
 }  // namespace rtmonitor

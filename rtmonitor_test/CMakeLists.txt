@@ -83,6 +83,15 @@ ament_target_dependencies(test_client_server2
   "rtmonitor_msgs"
   "std_msgs")
 
+add_executable(test_elapsed_global
+  src/test_elapsed_global.cpp)
+
+ament_target_dependencies(test_elapsed_global
+  "rclcpp"
+  "rtmonitor"
+  "rtmonitor_msgs"
+  "std_msgs")
+
 add_executable(test_ros2_comm
   src/test_ros2_comm/main.cpp)
 
@@ -99,6 +108,7 @@ install(TARGETS
   test_elapsed
   test_client_server
   test_client_server2
+  test_elapsed_global
   test_ros2_comm
   DESTINATION lib/${PROJECT_NAME})
 

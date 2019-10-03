@@ -15,9 +15,12 @@
 #ifndef RTMONITOR__RTM_CLIENT_HPP_
 #define RTMONITOR__RTM_CLIENT_HPP_
 
+#include <string>
+
 #include "rclcpp/rclcpp.hpp"
 #include "rtmonitor/rtm_data.hpp"
 #include "rtmonitor_msgs/srv/req_loop_time.hpp"
+#include "rtmonitor_msgs/srv/req_elapsed.hpp"
 
 namespace rtmonitor
 {
@@ -28,10 +31,13 @@ public:
   explicit RtmClient(rclcpp::Node::SharedPtr node);
   ~RtmClient();
   bool create_client_looptime(rclcpp::Node::SharedPtr node);
+  bool create_client_elapsed(rclcpp::Node::SharedPtr node);
   bool request_looptime(RtmData * rtd);
+  bool request_elapsed(std::string id, bool is_start, rclcpp::Time now);
 
 private:
   rclcpp::Client<rtmonitor_msgs::srv::ReqLoopTime>::SharedPtr loop_time_client_;
+  rclcpp::Client<rtmonitor_msgs::srv::ReqElapsed>::SharedPtr elapsed_client_;
 };
 
 }  // namespace rtmonitor
