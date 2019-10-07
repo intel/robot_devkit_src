@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <memory>
+#include <string>
 
 #include "rtmonitor/rtm_client.hpp"
 
@@ -22,6 +23,12 @@ namespace rtmonitor
 RtmClient::RtmClient(rclcpp::Node::SharedPtr node)
 {
   create_client_looptime(node);
+  create_client_elapsed(node);
+}
+
+RtmClient::RtmClient(rclcpp_lifecycle::LifecycleNode::SharedPtr lc_node)
+{
+  lc_create_client_elapsed(lc_node);
 }
 
 RtmClient::~RtmClient()
@@ -68,6 +75,55 @@ bool RtmClient::request_looptime(RtmData * rtd)
   RCLCPP_INFO(node->get_logger(), "result of %" PRId64 " + %" PRId64 " = %" PRId64,
     request->a, request->b, result->sum);
 #endif
+
+  return true;
+}
+
+bool RtmClient::create_client_elapsed(rclcpp::Node::SharedPtr node)
+{
+  elapsed_client_ = node->create_client<rtmonitor_msgs::srv::ReqElapsed>("elapsed");
+
+  while (!elapsed_client_->wait_for_service(std::chrono::seconds(1))) {
+    if (!rclcpp::ok()) {
+      RCLCPP_ERROR(node->get_logger(),
+        "client interrupted while waiting for elapsed service to appear.");
+      return false;
+    }
+    RCLCPP_INFO(node->get_logger(), "waiting for elapsed service to appear...");
+  }
+
+  return true;
+}
+
+bool RtmClient::lc_create_client_elapsed(rclcpp_lifecycle::LifecycleNode::SharedPtr lc_node)
+{
+  elapsed_client_ = lc_node->create_client<rtmonitor_msgs::srv::ReqElapsed>("elapsed");
+
+  while (!elapsed_client_->wait_for_service(std::chrono::seconds(1))) {
+    if (!rclcpp::ok()) {
+      RCLCPP_ERROR(lc_node->get_logger(),
+        "client interrupted while waiting for elapsed service to appear.");
+      return false;
+    }
+    RCLCPP_INFO(lc_node->get_logger(), "waiting for elapsed service to appear...");
+  }
+
+  return true;
+}
+
+bool RtmClient::request_elapsed(std::string id, bool is_start, rclcpp::Time now)
+{
+  // TODO(lbegani): check if elapsed service is running
+
+  auto request = std::make_shared<rtmonitor_msgs::srv::ReqElapsed::Request>();
+
+  request->req.id = id;
+  request->req.is_start = is_start;
+  request->req.time_ns = now.nanoseconds();
+
+  auto result_future = elapsed_client_->async_send_request(request);
+
+  // TODO(lbegani): Check if elapsed need to be fetched from service. Ignoring it now to save time.
 
   return true;
 }

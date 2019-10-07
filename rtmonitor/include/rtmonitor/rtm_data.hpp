@@ -45,6 +45,14 @@ public:
   rclcpp::Duration perf_time_;
 };
 
+struct RtmPerfMetric {
+  std::string id_;
+  uint32_t iter_cnt_;
+  uint64_t start_ns_;
+  uint64_t stop_ns_;
+  uint64_t dur_ns_;
+};
+
 }  // namespace rtmonitor
 
 #endif  // RTMONITOR__RTM_DATA_HPP_

@@ -16,9 +16,13 @@
 #define RTMONITOR__RTM_SERVICE_HPP_
 
 #include <memory>
+#include <string>
+#include <map>
 
 #include "rclcpp/rclcpp.hpp"
+#include "rtmonitor/rtm_data.hpp"
 #include "rtmonitor_msgs/srv/req_loop_time.hpp"
+#include "rtmonitor_msgs/srv/req_elapsed.hpp"
 #include "rtmonitor/rtm_publisher.hpp"
 
 namespace rtmonitor
@@ -30,15 +34,25 @@ public:
   RtmService();
   ~RtmService();
   bool init();
+  bool deinit();
+  RtmPerfMetric* init_perf_metric(std::string id);
   bool create_service_looptime();
+  bool create_service_elapsed();
   void handle_looptime(
     const std::shared_ptr<rmw_request_id_t> request_header,
     const std::shared_ptr<rtmonitor_msgs::srv::ReqLoopTime::Request> req,
     std::shared_ptr<rtmonitor_msgs::srv::ReqLoopTime::Response> res);
+  void handle_elapsed(
+    const std::shared_ptr<rmw_request_id_t> request_header,
+    const std::shared_ptr<rtmonitor_msgs::srv::ReqElapsed::Request> req,
+    std::shared_ptr<rtmonitor_msgs::srv::ReqElapsed::Response> res);
 
 private:
   rclcpp::Service<rtmonitor_msgs::srv::ReqLoopTime>::SharedPtr loop_time_srv_;
+  rclcpp::Service<rtmonitor_msgs::srv::ReqElapsed>::SharedPtr elapsed_srv_;
   std::shared_ptr<RtmPublisher> rtm_pub_;
+  std::map<std::string, RtmPerfMetric *> perf_map_;
+  FILE * log_file_;
 };
 
 }  // namespace rtmonitor

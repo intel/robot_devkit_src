@@ -91,7 +91,18 @@ bool RealTimeMonitor::init(rclcpp::Node::SharedPtr node, std::string id)
   }
 
   rtm_client_ = std::make_shared<RtmClient>(node);
-  // Check if client created successfully
+  // TODO(lbegani): Check if client created successfully
+  return true;
+}
+
+bool RealTimeMonitor::init(rclcpp_lifecycle::LifecycleNode::SharedPtr lc_node, std::string id)
+{
+  if (!init(id)) {
+    return false;
+  }
+
+  rtm_client_ = std::make_shared<RtmClient>(lc_node);
+  // TODO(lbegani): Check if client created successfully
   return true;
 }
 
@@ -251,6 +262,18 @@ rclcpp::Duration RealTimeMonitor::calc_elapsed(std::string id, bool is_start, rc
   }
 
   return elapsed;
+}
+
+bool RealTimeMonitor::calc_elapsed_g(std::string id, bool is_start, rclcpp::Time now)
+{
+  bool ret = false;
+
+  // Call the client API
+  if (rtm_client_) {
+    ret = rtm_client_->request_elapsed(id, is_start, now);
+  }
+
+  return ret;
 }
 
 }  // namespace rtmonitor

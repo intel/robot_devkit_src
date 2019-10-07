@@ -14,6 +14,7 @@ endif()
 
 find_package(ament_cmake QUIET)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_lifecycle REQUIRED)
 find_package(rtmonitor_msgs REQUIRED)
 
 include_directories(include)
@@ -21,6 +22,7 @@ include_directories(include)
 add_library(rtmonitor SHARED src/rtmonitor.cpp src/rtm_client.cpp)
 ament_target_dependencies(rtmonitor
   rclcpp
+  rclcpp_lifecycle
   rtmonitor_msgs
 )
 
@@ -30,6 +32,7 @@ add_executable(rtm_service
 
 ament_target_dependencies(rtm_service
   "rclcpp"
+  "rclcpp_lifecycle"
   "rtmonitor_msgs"
   "std_msgs")
 
