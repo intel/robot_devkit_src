@@ -50,11 +50,13 @@ public:
   {
     // Measure looptime
     rtm_.calc_looptime("producer", this->now());
+    rtm_.calc_elapsed_g("produce_message", true, this->now());
     do_something_intensive();
     std_msgs::msg::String::UniquePtr msg(new std_msgs::msg::String());
     msg->data = "RT Message: " + std::to_string(count_++);
     RCLCPP_INFO(this->get_logger(), "Producer: [%s]", msg->data.c_str());
     pub_->publish(std::move(msg));
+    rtm_.calc_elapsed_g("produce_message", false, this->now());
   }
   void do_something_intensive()
   {

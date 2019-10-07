@@ -151,7 +151,7 @@ std::shared_ptr<rtmonitor_msgs::srv::ReqElapsed::Response> res)
   if (it != perf_map_.end()) {
     perf_metric = it->second;
   } else {
-    RCLCPP_INFO(get_logger(), "Error: No such Id monitored %s\n", id.c_str());
+    RCLCPP_INFO(get_logger(), "Error: No such Id monitored %s", id.c_str());
     perf_metric = init_perf_metric(id);
   }
 
@@ -171,6 +171,9 @@ std::shared_ptr<rtmonitor_msgs::srv::ReqElapsed::Response> res)
       uint32_t secs = ((perf_metric->dur_ns_) - nsecs) / 1000000000;
       fprintf(log_file_, "%s:Iteration: %d Duration: %d secs %d nsecs\n", id.c_str(),
         perf_metric->iter_cnt_, secs, nsecs);
+    } else
+    {
+      RCLCPP_INFO(get_logger(), "Error: %s: Start and Stop out of sync", id.c_str());
     }
 
     perf_metric->start_ns_ = 0;
