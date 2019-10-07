@@ -34,6 +34,7 @@ public:
   RtmService();
   ~RtmService();
   bool init();
+  bool deinit();
   RtmPerfMetric* init_perf_metric(std::string id);
   bool create_service_looptime();
   bool create_service_elapsed();
@@ -51,6 +52,7 @@ private:
   rclcpp::Service<rtmonitor_msgs::srv::ReqElapsed>::SharedPtr elapsed_srv_;
   std::shared_ptr<RtmPublisher> rtm_pub_;
   std::map<std::string, RtmPerfMetric *> perf_map_;
+  FILE * log_file_;
 };
 
 }  // namespace rtmonitor

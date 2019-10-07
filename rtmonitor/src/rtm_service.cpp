@@ -29,6 +29,8 @@ RtmService::RtmService()
 
 RtmService::~RtmService()
 {
+  RCLCPP_INFO(get_logger(), "~RtmService");
+  deinit();
 }
 
 bool RtmService::init()
@@ -36,6 +38,30 @@ bool RtmService::init()
   create_service_looptime();
   create_service_elapsed();
   rtm_pub_ = std::make_shared<RtmPublisher>(shared_from_this());
+
+  std::string filename = "/tmp/log_rtm_service.txt";
+  log_file_ = fopen(filename.c_str(), "w");
+  if (log_file_ == NULL) {
+    RCLCPP_INFO(get_logger(), "Error: Could not open rtm service log file");
+    // TODO(lbegani): Delete allocated resources
+    return false;
+  }
+
+  fprintf(log_file_, "### RealTimeMonitor Service Log File ###\n");
+  return true;
+}
+
+bool RtmService::deinit()
+{
+  if(log_file_)
+    fclose(log_file_);
+
+  for (std::map<std::string, RtmPerfMetric *>::iterator it = perf_map_.begin();
+        it != perf_map_.end(); ++it)
+  {
+    delete it->second;
+  }
+
   return true;
 }
 
@@ -57,6 +83,8 @@ RtmPerfMetric* RtmService::init_perf_metric(std::string id)
   perf_metric->dur_ns_ = 0;
 
   perf_map_[id] = perf_metric;
+
+  fprintf(log_file_, "### Register New Performance Metric: %s ###\n", perf_metric->id_.c_str());
 
   return perf_metric;
 }
@@ -80,7 +108,7 @@ void RtmService::handle_looptime(
   const std::shared_ptr<rtmonitor_msgs::srv::ReqLoopTime::Request> req,
   std::shared_ptr<rtmonitor_msgs::srv::ReqLoopTime::Response> res)
 {
-  RCLCPP_INFO(get_logger(), "handle_looptime");
+  RCLCPP_DEBUG(get_logger(), "handle_looptime");
   rtmonitor_msgs::msg::LoopTime msg;
   msg.header.stamp = this->now();
   msg.topic = req->req.topic;
@@ -114,7 +142,7 @@ const std::shared_ptr<rmw_request_id_t> request_header,
 const std::shared_ptr<rtmonitor_msgs::srv::ReqElapsed::Request> req,
 std::shared_ptr<rtmonitor_msgs::srv::ReqElapsed::Response> res)
 {
-  RCLCPP_INFO(get_logger(), "handle_elapsed");
+  RCLCPP_DEBUG(get_logger(), "handle_elapsed");
   uint64_t elapsed = 0;
   RtmPerfMetric * perf_metric;
   std::string id = req->req.id;
@@ -123,7 +151,7 @@ std::shared_ptr<rtmonitor_msgs::srv::ReqElapsed::Response> res)
   if (it != perf_map_.end()) {
     perf_metric = it->second;
   } else {
-    printf("Error: No such Id monitored %s\n", id.c_str());
+    RCLCPP_INFO(get_logger(), "Error: No such Id monitored %s\n", id.c_str());
     perf_metric = init_perf_metric(id);
   }
 
@@ -141,7 +169,7 @@ std::shared_ptr<rtmonitor_msgs::srv::ReqElapsed::Response> res)
       // Save the calculated elapsed duration to a file
       uint32_t nsecs = (perf_metric->dur_ns_) % 1000000000;
       uint32_t secs = ((perf_metric->dur_ns_) - nsecs) / 1000000000;
-      printf("%s:Iteration: %d Duration: %d secs %d nsecs\n", id.c_str(),
+      fprintf(log_file_, "%s:Iteration: %d Duration: %d secs %d nsecs\n", id.c_str(),
         perf_metric->iter_cnt_, secs, nsecs);
     }
 
