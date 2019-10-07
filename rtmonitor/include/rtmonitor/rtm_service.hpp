@@ -17,8 +17,10 @@
 
 #include <memory>
 #include <string>
+#include <map>
 
 #include "rclcpp/rclcpp.hpp"
+#include "rtmonitor/rtm_data.hpp"
 #include "rtmonitor_msgs/srv/req_loop_time.hpp"
 #include "rtmonitor_msgs/srv/req_elapsed.hpp"
 #include "rtmonitor/rtm_publisher.hpp"
@@ -32,6 +34,7 @@ public:
   RtmService();
   ~RtmService();
   bool init();
+  RtmPerfMetric* init_perf_metric(std::string id);
   bool create_service_looptime();
   bool create_service_elapsed();
   void handle_looptime(
@@ -46,11 +49,8 @@ public:
 private:
   rclcpp::Service<rtmonitor_msgs::srv::ReqLoopTime>::SharedPtr loop_time_srv_;
   rclcpp::Service<rtmonitor_msgs::srv::ReqElapsed>::SharedPtr elapsed_srv_;
-  std::string elapsed_id;
-  uint32_t elapsed_iter;
-  uint64_t elapsed_start_ns;
-  uint64_t elapsed_stop_ns;
   std::shared_ptr<RtmPublisher> rtm_pub_;
+  std::map<std::string, RtmPerfMetric *> perf_map_;
 };
 
 }  // namespace rtmonitor

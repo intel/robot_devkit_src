@@ -85,7 +85,8 @@ bool RtmClient::create_client_elapsed(rclcpp::Node::SharedPtr node)
 
   while (!elapsed_client_->wait_for_service(std::chrono::seconds(1))) {
     if (!rclcpp::ok()) {
-      RCLCPP_ERROR(node->get_logger(), "client interrupted while waiting for elapsed service to appear.");
+      RCLCPP_ERROR(node->get_logger(),
+        "client interrupted while waiting for elapsed service to appear.");
       return false;
     }
     RCLCPP_INFO(node->get_logger(), "waiting for elapsed service to appear...");
@@ -100,7 +101,8 @@ bool RtmClient::lc_create_client_elapsed(rclcpp_lifecycle::LifecycleNode::Shared
 
   while (!elapsed_client_->wait_for_service(std::chrono::seconds(1))) {
     if (!rclcpp::ok()) {
-      RCLCPP_ERROR(lc_node->get_logger(), "client interrupted while waiting for elapsed service to appear.");
+      RCLCPP_ERROR(lc_node->get_logger(),
+        "client interrupted while waiting for elapsed service to appear.");
       return false;
     }
     RCLCPP_INFO(lc_node->get_logger(), "waiting for elapsed service to appear...");
