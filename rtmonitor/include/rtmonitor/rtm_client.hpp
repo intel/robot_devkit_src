@@ -35,6 +35,7 @@ public:
   bool create_client_looptime(rclcpp::Node::SharedPtr node);
   bool create_client_elapsed(rclcpp::Node::SharedPtr node);
   bool lc_create_client_elapsed(rclcpp_lifecycle::LifecycleNode::SharedPtr lc_node);
+  bool lc_create_client_looptime(rclcpp_lifecycle::LifecycleNode::SharedPtr lc_node);
   bool request_looptime(RtmData * rtd);
   bool request_elapsed(std::string id, bool is_start, rclcpp::Time now);
 

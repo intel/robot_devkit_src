@@ -157,12 +157,13 @@ std::shared_ptr<rtmonitor_msgs::srv::ReqElapsed::Response> res)
 
   if (req->req.is_start) {
     perf_metric->start_ns_ = req->req.time_ns;
+    // printf("%s:start:%ld ns \n", id.c_str(), long(perf_metric->start_ns_));
   } else {
     // TODO(lbegani): Check if id exists
     perf_metric->stop_ns_ = req->req.time_ns;
+    // printf("%s:stop:%ld ns \n", id.c_str(), long(perf_metric->stop_ns_));
 
-    // TODO(lbegani): Check if elapsed_start < elapsed_stop.
-    if(perf_metric->stop_ns_ > perf_metric->start_ns_
+    if(perf_metric->stop_ns_ >= perf_metric->start_ns_
         && perf_metric->start_ns_ > 0) {
       perf_metric->dur_ns_ = perf_metric->stop_ns_ - perf_metric->start_ns_;
       perf_metric->iter_cnt_++;

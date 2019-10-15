@@ -58,8 +58,6 @@ RealTimeMonitor::~RealTimeMonitor()
 
     delete it->second;
   }
-
-  // TODO(lbegani): Delete the RtmData structs.
 }
 
 bool RealTimeMonitor::init(std::string id)
@@ -203,9 +201,9 @@ rclcpp::Duration RealTimeMonitor::calc_looptime(std::string id, rclcpp::Time now
   rtd->perf_time_ = looptime;
 
   // Call the client API
-  if (rtm_client_) {
-    rtm_client_->request_looptime(rtd);
-  }
+  //if (rtm_client_) {
+    //rtm_client_->request_looptime(rtd);
+  //}
 
   rtd->start_perf_time_ = now;
   rtd->iter_cnt_++;
