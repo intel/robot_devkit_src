@@ -173,8 +173,7 @@ std::shared_ptr<rtmonitor_msgs::srv::ReqElapsed::Response> res)
       uint32_t secs = ((perf_metric->dur_ns_) - nsecs) / 1000000000;
       fprintf(log_file_, "%s:Iteration: %d Duration: %d secs %d nsecs\n", id.c_str(),
         perf_metric->iter_cnt_, secs, nsecs);
-    } else
-    {
+    } else {
       RCLCPP_INFO(get_logger(), "Error: %s: Start and Stop out of sync", id.c_str());
       // printf("start:%ld ns \n", long(perf_metric->start_ns_));
       // printf("stop:%ld ns \n", long(perf_metric->stop_ns_));

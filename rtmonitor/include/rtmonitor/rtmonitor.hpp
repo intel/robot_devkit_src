@@ -43,82 +43,22 @@ public:
   ~RealTimeMonitor();
 
   /**
-   *  Initialize.
+   *  Initialize with ROS2 node pointer.
    *
-   *  @param[in] id Identifier.
+   *  @param[in] node ROS2 node pointer.
    *
    *  @return Status of request.
    */
-  bool init(std::string id);
+  bool init(rclcpp::Node::SharedPtr node);
 
   /**
-   *  Initialize with upper and lower limits.
+   *  Initialize with ROS2 lifecycle node pointer.
    *
-   *  @param[in] id Identifier.
-   *
-   *  @return Status of request.
-   */
-  // bool init(std::string id, rclcpp::Duration max, rclcpp::Duration min);
-
-  /**
-   *  Initialize to publish RT metrics on ROS2 topic.
-   *
-   *  @param[in] node Node Pointer.
-   *  @param[in] id Identifier.
+   *  @param[in] lc_node ROS2 lifecycle node pointer.
    *
    *  @return Status of request.
    */
-  bool init(rclcpp::Node::SharedPtr node, std::string id);
-
-  /**
-   *  Initialize for inter-process performance metrics for lifecycle node.
-   *
-   *  @param[in] lc_node LifecycleNode Pointer.
-   *  @param[in] id Identifier.
-   *
-   *  @return Status of request.
-   */
-  bool init(rclcpp_lifecycle::LifecycleNode::SharedPtr lc_node, std::string id);
-
-  /**
-   *  Initialize to publish RT metrics on ROS2 topic.
-   *
-   *  @param[in] node Node Pointer.
-   *  @param[in] id Identifier.
-   *
-   *  @return Status of request.
-   */
-  // bool init(rclcpp::Node::SharedPtr node, std::string id, rclcpp::Duration max, rclcpp::Duration min);
-
-  /**
-   *  Initialize to receive callback on missed deadlines.
-   *
-   *  @param[in] id Identifier.
-   *  @param[in] rate Rate set for loop.
-   *  @param[in] jitter_margin Deviation acceptable in percentage.
-   *  @param[in] cb Callback to be called on missed deadlines.
-   *
-   *  @return Status of request.
-   */
-  bool init(
-    std::string id, uint32_t rate, uint32_t jitter_margin,
-    std::function<void(int iter_num, rclcpp::Duration looptime)> cb);
-
-  /**
-   *  Initialize to receive callback on missed deadlines and publish RT metrics.
-   *
-   *  @param[in] node Node Pointer.
-   *  @param[in] id Identifier.
-   *  @param[in] rate Rate set for loop.
-   *  @param[in] jitter_margin Deviation acceptable in percentage.
-   *  @param[in] cb Callback to be called on missed deadlines.
-   *
-   *  @return Status of request.
-   */
-  bool init(
-    rclcpp::Node::SharedPtr node, std::string id, uint32_t rate, uint32_t jitter_margin,
-    std::function<void(int iter_num, rclcpp::Duration looptime)> cb);
-
+  bool init(rclcpp_lifecycle::LifecycleNode::SharedPtr lc_node);
 
   /**
    *  Deinitialize.
@@ -128,6 +68,30 @@ public:
    *  @return Status of request.
    */
   bool deinit(std::string id);
+
+  /**
+   *  Register to receive callback on missed deadlines.
+   *
+   *  @param[in] id Identifier.
+   *  @param[in] exp_perf_ns Expected duration of the metric in nanosec.
+   *  @param[in] exp_jitter_ns Deviation acceptable in nanosec.
+   *  @param[in] cb Callback to be called on missed deadlines.
+   *
+   *  @return Status of request.
+   */
+  bool register_callback(
+   std::string id, rclcpp::Duration exp_perf_ns, rclcpp::Duration exp_jitter_ns,
+   std::function<void(uint32_t iter_num, rclcpp::Duration perf_ns)> cb);
+
+
+  /**
+   *  Deregister to stop receiving callback on missed deadlines.
+   *
+   *  @param[in] id Identifier.
+   *
+   *  @return Status of request.
+   */
+  bool deregister_callback(std::string id);
 
   /**
    *  Calculate Looptime.
@@ -175,7 +139,11 @@ public:
   bool calc_elapsed_g(std::string id, bool is_start, rclcpp::Time now);
 
 private:
+  bool add_metrics(std::string id);
+  bool remove_metrics(std::string id);
+  RtmData* get_metrics_data(std::string id);
   void print_duration(FILE * log_file_, uint32_t iter, rclcpp::Duration dur) const;
+  void print_duration(FILE * log_file_, uint32_t iter, uint64_t dur) const;
   void print_metrics(FILE * log_file_) const;
   int create_publisher();
   int destroy_publisher();

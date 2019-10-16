@@ -40,6 +40,7 @@ ament_target_dependencies(test_rtmonitor
   "rtmonitor_msgs"
   "std_msgs")
 
+#[[
 add_executable(test_looptime
   src/test_looptime.cpp)
 
@@ -109,16 +110,16 @@ ament_target_dependencies(test_ros2_comm
   "rtmonitor"
   "rtmonitor_msgs"
   "std_msgs")
-
+]]
 install(TARGETS
   test_rtmonitor
-  test_looptime
-  test_latency
-  test_elapsed
-  test_client_server
-  test_client_server2
-  test_elapsed_global
-  test_ros2_comm
+#  test_looptime
+#  test_latency
+#  test_elapsed
+#  test_client_server
+#  test_client_server2
+#  test_elapsed_global
+#  test_ros2_comm
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)

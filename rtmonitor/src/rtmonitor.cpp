@@ -30,6 +30,13 @@ void RealTimeMonitor::print_duration(FILE * log_file_, uint32_t iter, rclcpp::Du
   fprintf(log_file_, "Iteration: %d Duration: %d secs %d nsecs\n", iter, secs, nsecs);
 }
 
+void RealTimeMonitor::print_duration(FILE * log_file_, uint32_t iter, uint64_t dur) const
+{
+  uint32_t nsecs = dur % 1000000000;
+  uint32_t secs = (dur - nsecs) / 1000000000;
+  fprintf(log_file_, "Iteration: %d Duration: %d secs %d nsecs\n", iter, secs, nsecs);
+}
+
 void RealTimeMonitor::print_metrics(FILE * log_file_) const
 {
   struct rusage r_usage;
@@ -60,9 +67,71 @@ RealTimeMonitor::~RealTimeMonitor()
   }
 }
 
-bool RealTimeMonitor::init(std::string id)
+bool RealTimeMonitor::init(rclcpp::Node::SharedPtr node)
 {
-  // TODO(lbegani): Check if the id already exists.
+  // TODO(lbegani): Check if client already exists
+  rtm_client_ = std::make_shared<RtmClient>(node);
+  // TODO(lbegani): Check if client created successfully
+  return true;
+}
+
+bool RealTimeMonitor::init(rclcpp_lifecycle::LifecycleNode::SharedPtr lc_node)
+{
+  // TODO(lbegani): Check if client already exists
+  rtm_client_ = std::make_shared<RtmClient>(lc_node);
+  // TODO(lbegani): Check if client created successfully
+  return true;
+}
+
+bool RealTimeMonitor::deinit(std::string id)
+{
+  // TODO(lbegani): Remove the id/data from the map
+  (void)(id);
+  return true;
+}
+
+bool RealTimeMonitor::register_callback(
+  std::string id, rclcpp::Duration exp_perf_ns, rclcpp::Duration exp_jitter_ns,
+  std::function<void(uint32_t iter_num, rclcpp::Duration perf_ns)> cb)
+{
+  // If id is not created, create id
+  RtmData * rtd = get_metrics_data(id);
+  if(!rtd) {
+    add_metrics(id);
+    rtd = get_metrics_data(id);
+  }
+
+  // Create cb struct and put it to id data
+  rtd->cb_ = new RtmCallback();
+  rtd->cb_->id_ = id;
+  rtd->cb_->overrun_cb_ = cb;
+  rtd->cb_->perf_ns_ = exp_perf_ns.nanoseconds();
+  rtd->cb_->jitter_ns_ = exp_jitter_ns.nanoseconds();
+
+  return true;
+}
+
+bool RealTimeMonitor::deregister_callback(std::string id)
+{
+  // If id is created and callback is registered, delete registeration
+  RtmData * rtd = get_metrics_data(id);
+  if(!rtd)
+    return false;
+
+  if(rtd->cb_) {
+    delete rtd->cb_;
+    rtd->cb_ = nullptr;
+  }
+
+  return true;
+}
+
+bool RealTimeMonitor::add_metrics(std::string id)
+{
+  if(get_metrics_data(id) != nullptr) {
+    // print log
+    return false;
+  }
 
   RtmData * rtd = new RtmData();
 
@@ -75,191 +144,151 @@ bool RealTimeMonitor::init(std::string id)
     printf("Error: Could not open log file");
   }
 
-  rtd->init_ = false;
+  rtd->perf_ = new RtmPerfMetric();
 
   rtd_map_[id] = rtd;
 
   return true;
 }
 
-bool RealTimeMonitor::init(rclcpp::Node::SharedPtr node, std::string id)
+bool RealTimeMonitor::remove_metrics(std::string id)
 {
-  if (!init(id)) {
+  RtmData * rtd = get_metrics_data(id);
+  if(rtd == nullptr)
     return false;
-  }
 
-  rtm_client_ = std::make_shared<RtmClient>(node);
-  // TODO(lbegani): Check if client created successfully
+  fclose(rtd->log_file_);
+
+  // Remove entry from map
+
+  // Delete the structure
+  if(rtd->cb_)
+    delete rtd->cb_;
+
+  if(rtd->perf_)
+    delete rtd->perf_;
+
+  delete rtd;
+
   return true;
 }
 
-bool RealTimeMonitor::init(rclcpp_lifecycle::LifecycleNode::SharedPtr lc_node, std::string id)
+RtmData* RealTimeMonitor::get_metrics_data(std::string id)
 {
-  if (!init(id)) {
-    return false;
-  }
-
-  rtm_client_ = std::make_shared<RtmClient>(lc_node);
-  // TODO(lbegani): Check if client created successfully
-  return true;
-}
-
-bool RealTimeMonitor::init(
-  std::string id, uint32_t rate, uint32_t jitter_margin,
-  std::function<void(int iter_num, rclcpp::Duration looptime)> cb)
-{
-  if (!init(id)) {
-    return false;
-  }
-
-  RtmData * rtd;
+  RtmData * rtd = nullptr;
   std::map<std::string, RtmData *>::iterator it = rtd_map_.find(id);
   if (it != rtd_map_.end()) {
     rtd = it->second;
   } else {
-    printf("Error: Initialization error %s", id.c_str());
-    return false;
+    printf("No such metric Id registered: %s\n", id.c_str());
+    rtd = nullptr;
   }
 
-  // rtd->rate_ = rate;
-  // rtd->jitter_margin_ = jitter_margin;
-
-  rtd->overrun_cb_ = cb;
-
-  uint32_t looptime_ns = 1000000000 / rate;
-  uint32_t jitter_ns = (looptime_ns * jitter_margin) / 100;
-  uint32_t max_looptime_ns = looptime_ns + jitter_ns;
-  uint32_t min_looptime_ns = looptime_ns - jitter_ns;
-  // rtd->acceptable_looptime_ = rclcpp::Duration(0, desired_looptime_ns);
-  rtd->max_perf_time_ = rclcpp::Duration(0, max_looptime_ns);
-  rtd->min_perf_time_ = rclcpp::Duration(0, min_looptime_ns);
-
-  fprintf(rtd->log_file_, "Desired looptime:%ld ns \n",
-    long(rtd->max_perf_time_.nanoseconds()));
-
-  return true;
-}
-
-bool RealTimeMonitor::init(
-  rclcpp::Node::SharedPtr node, std::string id, uint32_t rate, uint32_t jitter_margin,
-  std::function<void(int iter_num, rclcpp::Duration looptime)> cb)
-{
-  if (!init(id, rate, jitter_margin, cb)) {
-    return false;
-  }
-
-  rtm_client_ = std::make_shared<RtmClient>(node);
-  // Check if client created successfully
-  return true;
-}
-
-bool RealTimeMonitor::deinit(std::string id)
-{
-  // TODO(lbegani): Remove the id/data from the map
-  (void)(id);
-  return true;
+  return rtd;
 }
 
 rclcpp::Duration RealTimeMonitor::calc_looptime(std::string id, rclcpp::Time now)
 {
-  RtmData * rtd;
-  rclcpp::Duration looptime(0, 0);
-  // TODO(lbegani): Put id->rtd in a common util function
-  std::map<std::string, RtmData *>::iterator it = rtd_map_.find(id);
-  if (it != rtd_map_.end()) {
-    rtd = it->second;
-  } else {
-    printf("Error: No such Id monitored %s\n", id.c_str());
-    return looptime;
+  // If id is not created, create id
+  RtmData * rtd = get_metrics_data(id);
+  if(!rtd) {
+    add_metrics(id);
+    rtd = get_metrics_data(id);
   }
 
-/*
-  if(now < prev_looptime_) {
-    printf("Invalid argument");
-    return -1;
-  }
-*/
+  uint64_t looptime = 0;
+  uint64_t jitter = 0;
 
-  rtd->stop_perf_time_ = now;
+  if(rtd->perf_->start_ns_ == 0)
+    rtd->perf_->start_ns_ = now.nanoseconds();
 
-  if (rtd->init_) {
-    looptime = rtd->stop_perf_time_ - rtd->start_perf_time_;
-  } else {
-    rtd->init_ = true;
-  }
+  rtd->perf_->stop_ns_ = now.nanoseconds();
+
+  looptime = rtd->perf_->stop_ns_ - rtd->perf_->start_ns_;
 
   // fprintf(rtd->log_file_, "Iteration: %d ", rtd->iter_cnt_);
-  print_duration(rtd->log_file_, rtd->iter_cnt_, looptime);
+  print_duration(rtd->log_file_, rtd->perf_->iter_cnt_, looptime);
 
-  if (rtd->overrun_cb_) {
-    if (looptime > rtd->max_perf_time_) {
-      rtd->overrun_cb_(rtd->iter_cnt_, looptime);
-      print_metrics(rtd->log_file_);
+  if (rtd->cb_->overrun_cb_) {
+    // calculate difference between looptime and expected time
+    jitter = (looptime > rtd->cb_->perf_ns_) ?
+                looptime - rtd->cb_->perf_ns_ : rtd->cb_->perf_ns_ - looptime;
+    // call the callback if diff more than jitter
+    if(jitter > rtd->cb_->jitter_ns_ && rtd->perf_->iter_cnt_) {
+      printf("Deadline Missed- looptime:%ld Expected time:%ld \n", looptime, rtd->cb_->perf_ns_);
+      printf("Jitter:%ld Expected Jitter:%ld\n", jitter, rtd->cb_->jitter_ns_);
+      rtd->cb_->overrun_cb_(rtd->perf_->iter_cnt_, rclcpp::Duration(looptime));
     }
   }
 
-  rtd->perf_time_ = looptime;
+  rtd->perf_->dur_ns_ = looptime;
 
-  // Call the client API
-  //if (rtm_client_) {
-    //rtm_client_->request_looptime(rtd);
-  //}
+/*
+  // Call the client API to publish data
+  if (rtm_client_) {
+    rtm_client_->request_looptime(rtd);
+  }
+*/
 
-  rtd->start_perf_time_ = now;
-  rtd->iter_cnt_++;
+  rtd->perf_->start_ns_ = now.nanoseconds();
+  rtd->perf_->iter_cnt_++;
 
-  return looptime;
+  return rclcpp::Duration(looptime);
 }
 
 rclcpp::Duration RealTimeMonitor::calc_latency(
   std::string id,
-  const builtin_interfaces::msg::Time & time,
+  const builtin_interfaces::msg::Time & ctime,
   rclcpp::Time now)
 {
-  rclcpp::Duration latency(0, 0);
-  RtmData * rtd;
-  std::map<std::string, RtmData *>::iterator it = rtd_map_.find(id);
-  if (it != rtd_map_.end()) {
-    rtd = it->second;
-  } else {
-    printf("Error: No such Id monitored %s\n", id.c_str());
-    return latency;
+  // If id is not created, create id
+  RtmData * rtd = get_metrics_data(id);
+  if(!rtd) {
+    add_metrics(id);
+    rtd = get_metrics_data(id);
   }
 
-  rclcpp::Time msg_time(time.sec, time.nanosec, now.get_clock_type());
+  rclcpp::Duration latency(0, 0);
+
+  rclcpp::Time msg_time(ctime.sec, ctime.nanosec, now.get_clock_type());
 
   latency = now - msg_time;
-  print_duration(rtd->log_file_, rtd->iter_cnt_, latency);
-  rtd->iter_cnt_++;
+  print_duration(rtd->log_file_, rtd->perf_->iter_cnt_, latency);
+  rtd->perf_->iter_cnt_++;
   return latency;
 }
 
 rclcpp::Duration RealTimeMonitor::calc_elapsed(std::string id, bool is_start, rclcpp::Time now)
 {
-  rclcpp::Duration elapsed(0, 0);
-  RtmData * rtd;
-  std::map<std::string, RtmData *>::iterator it = rtd_map_.find(id);
-  if (it != rtd_map_.end()) {
-    rtd = it->second;
-  } else {
-    printf("Error: No such Id monitored %s\n", id.c_str());
-    return elapsed;
+  // If id is not created, create id
+  RtmData * rtd = get_metrics_data(id);
+  if(!rtd) {
+    add_metrics(id);
+    rtd = get_metrics_data(id);
   }
+
+  uint64_t elapsed = 0;
 
   if (is_start) {
-    rtd->start_perf_time_ = now;
+    rtd->perf_->start_ns_ = now.nanoseconds();
   } else {
-    rtd->stop_perf_time_ = now;
+    rtd->perf_->stop_ns_ = now.nanoseconds();
 
-    // TODO(lbegani): Check if elapsed_start < elapsed_stop.
-    elapsed = rtd->stop_perf_time_ - rtd->start_perf_time_;
+    if(rtd->perf_->stop_ns_ >= rtd->perf_->start_ns_
+        && rtd->perf_->start_ns_ > 0) {
+      elapsed = rtd->perf_->stop_ns_ - rtd->perf_->start_ns_;
+      print_duration(rtd->log_file_, rtd->perf_->iter_cnt_, elapsed);
+      rtd->perf_->iter_cnt_++;
+    } else {
+      // RCLCPP_INFO(get_logger(), "Error: %s: Start and Stop out of sync", id.c_str());
+    }
 
-    print_duration(rtd->log_file_, rtd->iter_cnt_, elapsed);
-    rtd->iter_cnt_++;
-    // TODO(lbegani): reset elapsed_start and elapsed_stop.
+    rtd->perf_->start_ns_ = 0;
+    rtd->perf_->stop_ns_ = 0;
+    rtd->perf_->dur_ns_ = 0;
   }
 
-  return elapsed;
+  return rclcpp::Duration(elapsed);
 }
 
 bool RealTimeMonitor::calc_elapsed_g(std::string id, bool is_start, rclcpp::Time now)

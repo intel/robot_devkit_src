@@ -74,8 +74,8 @@ bool RtmClient::request_looptime(RtmData * rtd)
   request->req.pub = true;
   request->req.rate = 0;
   request->req.jitter = 0;
-  request->req.iteration = rtd->iter_cnt_;
-  request->req.looptime = rtd->perf_time_.nanoseconds();
+  request->req.iteration = rtd->perf_->iter_cnt_;
+  request->req.looptime = rtd->perf_->dur_ns_;
 
   auto result_future = loop_time_client_->async_send_request(request);
 

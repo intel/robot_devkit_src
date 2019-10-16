@@ -23,7 +23,13 @@ public:
   RTNode()
   : Node("rt_node")
   {
-    rtm_.init("test_rtm", 10 /*rate*/, 5 /*margin %age*/,
+    int rate = 10;
+    int margin_percent = 5;
+    uint64_t exp_perf_ns = 1e9/rate;
+    uint64_t exp_jitter_ns = (exp_perf_ns/100)*margin_percent;
+
+    rtm_.register_callback(
+      "test_rtm", rclcpp::Duration(exp_perf_ns), rclcpp::Duration(exp_jitter_ns),
       std::bind(&RTNode::cbLooptimeOverrun, this,
       std::placeholders::_1, std::placeholders::_2));
   }
@@ -32,10 +38,10 @@ public:
   {
     rtm_.calc_looptime("test_rtm", this->now());
   }
-  void cbLooptimeOverrun(int iter_num, rclcpp::Duration jitter)
+  void cbLooptimeOverrun(int iter_num, rclcpp::Duration perf_ns)
   {
     printf("Missed Deadline : %d\n", iter_num);
-    (void) jitter;
+    (void) perf_ns;
   }
 
 private:
@@ -59,6 +65,7 @@ int main(int argc, char * argv[])
   rclcpp::init(argc, argv);
 
   RTNode rt_node;
+  stop = 0;
   while (!stop) {
     rt_node.loop_function();
     usleep(110000);
