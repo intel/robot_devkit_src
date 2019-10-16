@@ -23,34 +23,33 @@ find_package(rmw REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(rtmonitor REQUIRED)
 find_package(rtmonitor_msgs REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
 
 include_directories(include)
 ament_export_include_directories(include)
+
+set(dependencies rclcpp
+  rclcpp
+  rclcpp_lifecycle
+  std_msgs
+  rtmonitor
+  rtmonitor_msgs
+)
 
 add_executable(test_rtmonitor
   src/test_rtm_core.cpp)
 
 ament_target_dependencies(test_rtmonitor
-  "rclcpp"
-  "rclcpp_lifecycle"
-  "rtmonitor"
-  "rtmonitor_msgs"
-  "std_msgs")
+  ${dependencies}
+)
 
-#[[
 add_executable(test_looptime
   src/test_looptime.cpp)
 
 ament_target_dependencies(test_looptime
-  "rclcpp"
-  "rclcpp_lifecycle"
-  "rtmonitor"
-  "rtmonitor_msgs"
-  "std_msgs")
+  ${dependencies}
+)
 
+#[[
 add_executable(test_latency
   src/test_latency.cpp)
 
@@ -113,7 +112,7 @@ ament_target_dependencies(test_ros2_comm
 ]]
 install(TARGETS
   test_rtmonitor
-#  test_looptime
+  test_looptime
 #  test_latency
 #  test_elapsed
 #  test_client_server
