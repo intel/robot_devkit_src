@@ -63,6 +63,13 @@ ament_target_dependencies(test_elapsed
   ${dependencies}
 )
 
+add_executable(test_elapsed_global
+  src/test_elapsed_global.cpp)
+
+ament_target_dependencies(test_elapsed_global
+  ${dependencies}
+)
+
 #[[
 add_executable(test_client_server
   src/test_client_server.cpp)
@@ -84,16 +91,6 @@ ament_target_dependencies(test_client_server2
   "rtmonitor_msgs"
   "std_msgs")
 
-add_executable(test_elapsed_global
-  src/test_elapsed_global.cpp)
-
-ament_target_dependencies(test_elapsed_global
-  "rclcpp"
-  "rclcpp_lifecycle"
-  "rtmonitor"
-  "rtmonitor_msgs"
-  "std_msgs")
-
 add_executable(test_ros2_comm
   src/test_ros2_comm/main.cpp)
 
@@ -109,9 +106,10 @@ install(TARGETS
   test_looptime
   test_latency
   test_elapsed
+  test_elapsed_global
 #  test_client_server
 #  test_client_server2
-#  test_elapsed_global
+
 #  test_ros2_comm
   DESTINATION lib/${PROJECT_NAME})
 
