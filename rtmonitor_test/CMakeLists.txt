@@ -49,27 +49,21 @@ ament_target_dependencies(test_looptime
   ${dependencies}
 )
 
-#[[
 add_executable(test_latency
   src/test_latency.cpp)
 
 ament_target_dependencies(test_latency
-  "rclcpp"
-  "rclcpp_lifecycle"
-  "rtmonitor"
-  "rtmonitor_msgs"
-  "std_msgs")
+  ${dependencies}
+)
 
 add_executable(test_elapsed
   src/test_elapsed.cpp)
 
 ament_target_dependencies(test_elapsed
-  "rclcpp"
-  "rclcpp_lifecycle"
-  "rtmonitor"
-  "rtmonitor_msgs"
-  "std_msgs")
+  ${dependencies}
+)
 
+#[[
 add_executable(test_client_server
   src/test_client_server.cpp)
 
@@ -113,8 +107,8 @@ ament_target_dependencies(test_ros2_comm
 install(TARGETS
   test_rtmonitor
   test_looptime
-#  test_latency
-#  test_elapsed
+  test_latency
+  test_elapsed
 #  test_client_server
 #  test_client_server2
 #  test_elapsed_global

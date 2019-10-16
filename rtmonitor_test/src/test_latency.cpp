@@ -60,8 +60,6 @@ public:
     sub_ =
       create_subscription<rtmonitor_msgs::msg::LoopTime>(topic_name, 10,
         std::bind(&Consumer::consume_message, this, std::placeholders::_1));
-
-    rtm_.init("msg_lat");
   }
   ~Consumer() {}
   void consume_message(const rtmonitor_msgs::msg::LoopTime::UniquePtr msg)
