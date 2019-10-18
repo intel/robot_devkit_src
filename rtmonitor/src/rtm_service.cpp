@@ -35,6 +35,7 @@ RtmService::~RtmService()
 
 bool RtmService::init()
 {
+  create_service_perfmetric();
   create_service_looptime();
   create_service_elapsed();
   rtm_pub_ = std::make_shared<RtmPublisher>(shared_from_this());
@@ -87,6 +88,36 @@ RtmPerfMetric* RtmService::init_perf_metric(std::string id)
   fprintf(log_file_, "### Register New Performance Metric: %s ###\n", perf_metric->id_.c_str());
 
   return perf_metric;
+}
+
+bool RtmService::create_service_perfmetric()
+{
+  auto handle_perf_metric_callback = [this](const std::shared_ptr<rmw_request_id_t> request_header,
+      const std::shared_ptr<rtmonitor_msgs::srv::ReqPerfMetric::Request> request,
+      std::shared_ptr<rtmonitor_msgs::srv::ReqPerfMetric::Response> response) -> void
+    {
+      handle_perfmetric(request_header, request, response);
+    };
+
+  perf_metric_srv_ = create_service<rtmonitor_msgs::srv::ReqPerfMetric>("perf_metric",
+      handle_perf_metric_callback);
+  return true;
+}
+
+void RtmService::handle_perfmetric(
+  const std::shared_ptr<rmw_request_id_t> request_header,
+  const std::shared_ptr<rtmonitor_msgs::srv::ReqPerfMetric::Request> req,
+  std::shared_ptr<rtmonitor_msgs::srv::ReqPerfMetric::Response> res)
+{
+  RCLCPP_DEBUG(get_logger(), "handle_perfmetric");
+  rtmonitor_msgs::msg::PerfMetric msg;
+  msg.header.stamp = this->now();
+  msg.id = req->req.id;
+  msg.iter_cnt = req->req.iter_cnt;
+  msg.dur_ns = req->req.dur_ns;
+
+  // publish looptime message
+  rtm_pub_->publish_perfmetric(msg);
 }
 
 bool RtmService::create_service_looptime()

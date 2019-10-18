@@ -1,0 +1,6 @@
+# Handle the request to publish performance metric
+
+rtmonitor_msgs/PerfMetric req
+---
+rtmonitor_msgs/PerfMetric resp
+

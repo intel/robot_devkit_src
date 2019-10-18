@@ -67,26 +67,27 @@ RealTimeMonitor::~RealTimeMonitor()
   }
 }
 
-bool RealTimeMonitor::init(rclcpp::Node::SharedPtr node)
+bool RealTimeMonitor::init(rclcpp::Node::SharedPtr node, bool pub_metric)
 {
   // TODO(lbegani): Check if client already exists
   rtm_client_ = std::make_shared<RtmClient>(node);
   // TODO(lbegani): Check if client created successfully
+  pub_metric_ = pub_metric;
   return true;
 }
 
-bool RealTimeMonitor::init(rclcpp_lifecycle::LifecycleNode::SharedPtr lc_node)
+bool RealTimeMonitor::init(rclcpp_lifecycle::LifecycleNode::SharedPtr lc_node, bool pub_metric)
 {
   // TODO(lbegani): Check if client already exists
   rtm_client_ = std::make_shared<RtmClient>(lc_node);
   // TODO(lbegani): Check if client created successfully
+  pub_metric_ = pub_metric;
   return true;
 }
 
-bool RealTimeMonitor::deinit(std::string id)
+bool RealTimeMonitor::deinit()
 {
-  // TODO(lbegani): Remove the id/data from the map
-  (void)(id);
+  rtm_client_.reset();
   return true;
 }
 
@@ -134,7 +135,7 @@ bool RealTimeMonitor::add_metrics(std::string id)
   }
 
   RtmData * rtd = new RtmData();
-
+  rtd->cb_ = nullptr;
   rtd->event_id_ = id;
 
   // TODO(lbegani): Check if file exists
@@ -145,6 +146,11 @@ bool RealTimeMonitor::add_metrics(std::string id)
   }
 
   rtd->perf_ = new RtmPerfMetric();
+  rtd->perf_->id_ = id;
+  rtd->perf_->iter_cnt_ = 0;
+  rtd->perf_->start_ns_ = 0;
+  rtd->perf_->stop_ns_ = 0;
+  rtd->perf_->dur_ns_ = 0;
 
   rtd_map_[id] = rtd;
 
@@ -209,7 +215,7 @@ rclcpp::Duration RealTimeMonitor::calc_looptime(std::string id, rclcpp::Time now
   // fprintf(rtd->log_file_, "Iteration: %d ", rtd->iter_cnt_);
   print_duration(rtd->log_file_, rtd->perf_->iter_cnt_, looptime);
 
-  if (rtd->cb_->overrun_cb_) {
+  if (rtd->cb_) {
     // calculate difference between looptime and expected time
     jitter = (looptime > rtd->cb_->perf_ns_) ?
                 looptime - rtd->cb_->perf_ns_ : rtd->cb_->perf_ns_ - looptime;
@@ -223,12 +229,10 @@ rclcpp::Duration RealTimeMonitor::calc_looptime(std::string id, rclcpp::Time now
 
   rtd->perf_->dur_ns_ = looptime;
 
-/*
   // Call the client API to publish data
-  if (rtm_client_) {
-    rtm_client_->request_looptime(rtd);
+  if (pub_metric_ && rtm_client_) {
+    rtm_client_->request_perfmetric(rtd->perf_);
   }
-*/
 
   rtd->perf_->start_ns_ = now.nanoseconds();
   rtd->perf_->iter_cnt_++;

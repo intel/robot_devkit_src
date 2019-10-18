@@ -49,7 +49,7 @@ public:
    *
    *  @return Status of request.
    */
-  bool init(rclcpp::Node::SharedPtr node);
+  bool init(rclcpp::Node::SharedPtr node, bool pub_metric = true);
 
   /**
    *  Initialize with ROS2 lifecycle node pointer.
@@ -58,16 +58,16 @@ public:
    *
    *  @return Status of request.
    */
-  bool init(rclcpp_lifecycle::LifecycleNode::SharedPtr lc_node);
+  bool init(rclcpp_lifecycle::LifecycleNode::SharedPtr lc_node, bool pub_metric = true);
 
   /**
    *  Deinitialize.
    *
-   *  @param[in] id Identifier.
+   *  @param[in] .
    *
    *  @return Status of request.
    */
-  bool deinit(std::string id);
+  bool deinit();
 
   /**
    *  Register to receive callback on missed deadlines.
@@ -151,6 +151,7 @@ private:
 
   std::map<std::string, RtmData *> rtd_map_;
   std::shared_ptr<RtmClient> rtm_client_;
+  bool pub_metric_;
 };
 
 }  // namespace rtmonitor

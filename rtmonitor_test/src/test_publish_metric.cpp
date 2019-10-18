@@ -34,17 +34,11 @@ public:
     pub_ = this->create_publisher<std_msgs::msg::String>(topic_name, qos);
 
     timer_ = this->create_wall_timer(100ms, std::bind(&Producer::produce_message, this));
-
-#if 0
-    rtm_.init("producer", 10 /*rate*/, 5 /*margin %age*/,
-      std::bind(&Producer::cbLooptimeOverrun, this,
-      std::placeholders::_1, std::placeholders::_2));
-#endif
   }
   ~Producer() {}
   void init()
   {
-    rtm_.init(shared_from_this(), "producer");
+    rtm_.init(shared_from_this());
   }
   void produce_message()
   {
