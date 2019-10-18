@@ -3,6 +3,7 @@ import numpy as np
 import re
 import argparse
 
+metric=""
 def create_parser():
     parser = argparse.ArgumentParser(description='Realtime Logparser Configuration')
     parser.add_argument('-f', '--filename', type=str, dest='filename', default='logfile.txt', help='Log file name')
@@ -14,11 +15,15 @@ def create_parser():
 def read(logfile):
     X = []
     Y = []
+    global metric
     with open(logfile) as f:
         line = f.readline()
         while line:
             # process line
-            if line.startswith('Iteration:'):
+            if line.startswith('RTMonitor Performance '):
+                metric_sre = re.search('Metric: (\w+)', line, re.IGNORECASE)
+                metric = metric_sre.group(1)
+            elif line.startswith('Iteration:'):
                 m = re.search('Iteration: (\d+)', line, re.IGNORECASE)
                 #print(m.group(1))
                 X.append(float(m.group(1)))
@@ -29,6 +34,7 @@ def read(logfile):
     return X,Y
 
 def plot_bar(args, X, Y):
+    global metric
     fig, ax = plt.subplots()
     ymin = np.min(Y)
     print("Min:", ymin)
@@ -54,8 +60,9 @@ def plot_bar(args, X, Y):
     #plt.plot(X,Y)
     plt.scatter(X,Y)
     #plt.plot(10,1500000,'r*')
-    plt.title('ROS2.0 Communication Latency', fontsize=20, fontweight='bold')
-    plt.xlabel('Iteration', fontsize=15)
+    #plt.title('ROS2.0 Communication Latency', fontsize=20, fontweight='bold')
+    plt.title('RTMonitor Metric: '+ metric, fontsize=20, fontweight='bold')
+    plt.xlabel('Iteration Count', fontsize=15)
     plt.ylabel('Round Trip Time (nsec)', fontsize=15)
     #plt.hlines(args.desired, 0, len(X), colors="g", linestyle="dashed")
     #plt.text(len(X), args.desired, ' Desired', ha='left', va='center', color="green")
