@@ -77,17 +77,14 @@ ament_target_dependencies(test_publish_metric
   ${dependencies}
 )
 
+add_executable(test_publish_metric2
+  src/test_publish_metric2.cpp)
+
+ament_target_dependencies(test_publish_metric2
+  ${dependencies}
+)
+
 #[[
-add_executable(test_client_server2
-  src/test_client_server2.cpp)
-
-ament_target_dependencies(test_client_server2
-  "rclcpp"
-  "rclcpp_lifecycle"
-  "rtmonitor"
-  "rtmonitor_msgs"
-  "std_msgs")
-
 add_executable(test_ros2_comm
   src/test_ros2_comm/main.cpp)
 
@@ -106,7 +103,7 @@ install(TARGETS
   test_elapsed
   test_elapsed_global
   test_publish_metric
-#  test_client_server2
+  test_publish_metric2
 
 #  test_ros2_comm
   DESTINATION lib/${PROJECT_NAME})

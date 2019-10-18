@@ -28,7 +28,7 @@ class Producer : public rclcpp::Node
 {
 public:
   explicit Producer(const std::string & topic_name)
-  : Node("producer")
+  : Node("producer2")
   {
     rclcpp::QoS qos(rclcpp::KeepLast(7));
     pub_ = this->create_publisher<std_msgs::msg::String>(topic_name, qos);
@@ -44,7 +44,7 @@ public:
   ~Producer() {}
   void init()
   {
-    rtm_.init(shared_from_this(), "producer2");
+    rtm_.init(shared_from_this());
   }
   void produce_message()
   {
