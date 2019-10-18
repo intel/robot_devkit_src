@@ -23,83 +23,68 @@ find_package(rmw REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(rtmonitor REQUIRED)
 find_package(rtmonitor_msgs REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
 
 include_directories(include)
 ament_export_include_directories(include)
+
+set(dependencies rclcpp
+  rclcpp
+  rclcpp_lifecycle
+  std_msgs
+  rtmonitor
+  rtmonitor_msgs
+)
 
 add_executable(test_rtmonitor
   src/test_rtm_core.cpp)
 
 ament_target_dependencies(test_rtmonitor
-  "rclcpp"
-  "rclcpp_lifecycle"
-  "rtmonitor"
-  "rtmonitor_msgs"
-  "std_msgs")
+  ${dependencies}
+)
 
 add_executable(test_looptime
   src/test_looptime.cpp)
 
 ament_target_dependencies(test_looptime
-  "rclcpp"
-  "rclcpp_lifecycle"
-  "rtmonitor"
-  "rtmonitor_msgs"
-  "std_msgs")
+  ${dependencies}
+)
 
 add_executable(test_latency
   src/test_latency.cpp)
 
 ament_target_dependencies(test_latency
-  "rclcpp"
-  "rclcpp_lifecycle"
-  "rtmonitor"
-  "rtmonitor_msgs"
-  "std_msgs")
+  ${dependencies}
+)
 
 add_executable(test_elapsed
   src/test_elapsed.cpp)
 
 ament_target_dependencies(test_elapsed
-  "rclcpp"
-  "rclcpp_lifecycle"
-  "rtmonitor"
-  "rtmonitor_msgs"
-  "std_msgs")
-
-add_executable(test_client_server
-  src/test_client_server.cpp)
-
-ament_target_dependencies(test_client_server
-  "rclcpp"
-  "rclcpp_lifecycle"
-  "rtmonitor"
-  "rtmonitor_msgs"
-  "std_msgs")
-
-add_executable(test_client_server2
-  src/test_client_server2.cpp)
-
-ament_target_dependencies(test_client_server2
-  "rclcpp"
-  "rclcpp_lifecycle"
-  "rtmonitor"
-  "rtmonitor_msgs"
-  "std_msgs")
+  ${dependencies}
+)
 
 add_executable(test_elapsed_global
   src/test_elapsed_global.cpp)
 
 ament_target_dependencies(test_elapsed_global
-  "rclcpp"
-  "rclcpp_lifecycle"
-  "rtmonitor"
-  "rtmonitor_msgs"
-  "std_msgs")
+  ${dependencies}
+)
 
+add_executable(test_publish_metric
+  src/test_publish_metric.cpp)
+
+ament_target_dependencies(test_publish_metric
+  ${dependencies}
+)
+
+add_executable(test_publish_metric2
+  src/test_publish_metric2.cpp)
+
+ament_target_dependencies(test_publish_metric2
+  ${dependencies}
+)
+
+#[[
 add_executable(test_ros2_comm
   src/test_ros2_comm/main.cpp)
 
@@ -109,16 +94,18 @@ ament_target_dependencies(test_ros2_comm
   "rtmonitor"
   "rtmonitor_msgs"
   "std_msgs")
+]]
 
 install(TARGETS
   test_rtmonitor
   test_looptime
   test_latency
   test_elapsed
-  test_client_server
-  test_client_server2
   test_elapsed_global
-  test_ros2_comm
+  test_publish_metric
+  test_publish_metric2
+
+#  test_ros2_comm
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)

@@ -11,6 +11,8 @@ rosidl_generate_interfaces(rtmonitor_msgs
   "msg/LoopTime.msg"
   "msg/Elapsed.msg"
   "msg/RtmVector.msg"
+  "msg/PerfMetric.msg"
+  "srv/ReqPerfMetric.srv"
   "srv/ReqLoopTime.srv"
   "srv/ReqElapsed.srv"
   DEPENDENCIES builtin_interfaces std_msgs

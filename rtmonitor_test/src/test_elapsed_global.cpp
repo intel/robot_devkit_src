@@ -26,6 +26,12 @@
 
 using namespace std::chrono_literals;
 
+// Rate at which the loop runs in Hz
+#define RATE 10
+
+// Acceptable Jitter margin in percentage
+#define JITTER_PERCENT 5
+
 class Producer : public rclcpp::Node
 {
 public:
@@ -37,14 +43,18 @@ public:
 
     timer_ = this->create_wall_timer(100ms, std::bind(&Producer::produce_message, this));
 
-    rtm_.init("producer", 10 /*rate*/, 5 /*margin %age*/,
+    uint64_t exp_perf_ns = 1e9/RATE;
+    uint64_t exp_jitter_ns = (exp_perf_ns/100)*JITTER_PERCENT;
+
+    rtm_.register_callback(
+      "producer", rclcpp::Duration(exp_perf_ns), rclcpp::Duration(exp_jitter_ns),
       std::bind(&Producer::cbLooptimeOverrun, this,
       std::placeholders::_1, std::placeholders::_2));
   }
   ~Producer() {}
   void init()
   {
-    rtm_.init(shared_from_this(), "something_intensive");
+    rtm_.init(shared_from_this());
   }
   void produce_message()
   {
@@ -61,7 +71,7 @@ public:
   void do_something_intensive()
   {
     rtm_.calc_elapsed_g("something_intensive", true, this->now());
-    usleep(100000);
+    usleep(1000000/RATE);
     rtm_.calc_elapsed_g("something_intensive", false, this->now());
   }
   void cbLooptimeOverrun(int iter_num, rclcpp::Duration jitter)

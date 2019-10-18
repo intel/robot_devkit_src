@@ -26,6 +26,12 @@
 
 using namespace std::chrono_literals;
 
+// Time within which the task should accomplish
+#define ACCEPTABLE_DURATION 100000000
+
+// Acceptable Jitter margin
+#define JITTER_PERCENT 5
+
 class Producer : public rclcpp::Node
 {
 public:
@@ -37,10 +43,13 @@ public:
 
     timer_ = this->create_wall_timer(100ms, std::bind(&Producer::produce_message, this));
 
-    rtm_.init("producer", 10 /*rate*/, 5 /*margin %age*/,
+    uint64_t exp_perf_ns = ACCEPTABLE_DURATION;
+    uint64_t exp_jitter_ns = (exp_perf_ns/100)*JITTER_PERCENT;
+
+    rtm_.register_callback(
+      "producer", rclcpp::Duration(exp_perf_ns), rclcpp::Duration(exp_jitter_ns),
       std::bind(&Producer::cbLooptimeOverrun, this,
       std::placeholders::_1, std::placeholders::_2));
-    rtm_.init("something_intensive");
   }
   ~Producer() {}
   void produce_message()

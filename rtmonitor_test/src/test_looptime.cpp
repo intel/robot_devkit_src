@@ -24,6 +24,11 @@
 
 using namespace std::chrono_literals;
 
+// Rate at which the loop runs
+#define RATE 10
+
+// Acceptable Jitter margin
+#define JITTER_PERCENT 5
 class Producer : public rclcpp::Node
 {
 public:
@@ -35,7 +40,11 @@ public:
 
     timer_ = this->create_wall_timer(100ms, std::bind(&Producer::produce_message, this));
 
-    rtm_.init("producer", 10 /*rate*/, 5 /*margin %age*/,
+    uint64_t exp_perf_ns = 1e9/RATE;
+    uint64_t exp_jitter_ns = (exp_perf_ns/100)*JITTER_PERCENT;
+
+    rtm_.register_callback(
+      "producer", rclcpp::Duration(exp_perf_ns), rclcpp::Duration(exp_jitter_ns),
       std::bind(&Producer::cbLooptimeOverrun, this,
       std::placeholders::_1, std::placeholders::_2));
   }
@@ -72,7 +81,11 @@ public:
       create_subscription<std_msgs::msg::String>(topic_name, 10,
         std::bind(&Consumer::consume_message, this, std::placeholders::_1));
 
-    rtm_.init("consumer", 10 /*rate*/, 5 /*margin %age*/,
+    uint64_t exp_perf_ns = 1e9/RATE;
+    uint64_t exp_jitter_ns = (exp_perf_ns/100)*JITTER_PERCENT;
+
+    rtm_.register_callback(
+      "consumer", rclcpp::Duration(exp_perf_ns), rclcpp::Duration(exp_jitter_ns),
       std::bind(&Consumer::cbLooptimeOverrun, this,
       std::placeholders::_1, std::placeholders::_2));
   }
@@ -82,7 +95,6 @@ public:
     // Measure looptime
     rtm_.calc_looptime("consumer", this->now());
     // Measure latency between publish and received
-    // rtm_.calc_latency("msg_lat", msg->header.stamp, this->now());
     RCLCPP_INFO(this->get_logger(), "Consumer: [%s]", msg->data.c_str());
   }
   void cbLooptimeOverrun(int iter_num, rclcpp::Duration jitter)

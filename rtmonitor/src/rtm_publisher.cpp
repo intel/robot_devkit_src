@@ -20,6 +20,7 @@ namespace rtmonitor
 RtmPublisher::RtmPublisher(rclcpp::Node::SharedPtr node)
 {
   create_publisher_looptime(node);
+  create_publisher_perfmetric(node);
 }
 
 RtmPublisher::~RtmPublisher()
@@ -36,6 +37,18 @@ bool RtmPublisher::publish_looptime(rtmonitor_msgs::msg::LoopTime msg)
   // rtmonitor_msgs::msg::LoopTime msg;
   // msg.iteration = 0;
   pub_looptime_->publish(msg);
+
+  return true;
+}
+
+bool RtmPublisher::create_publisher_perfmetric(rclcpp::Node::SharedPtr node)
+{
+  pub_perfmetric_ = node->create_publisher<rtmonitor_msgs::msg::PerfMetric>("rtm_perfmetric", 10);
+}
+
+bool RtmPublisher::publish_perfmetric(rtmonitor_msgs::msg::PerfMetric msg)
+{
+  pub_perfmetric_->publish(msg);
 
   return true;
 }

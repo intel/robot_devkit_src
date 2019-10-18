@@ -22,27 +22,12 @@
 
 namespace rtmonitor
 {
-class RtmData
-{
-public:
-  RtmData()
-  : init_(false), max_perf_time_(0, 0), min_perf_time_(0, 0),
-    iter_cnt_(0), start_perf_time_(0, 0), stop_perf_time_(0, 0),
-    perf_time_(0, 0) {}
-  ~RtmData() {}
 
-  bool init_;
-  std::string event_id_;
-  std::function<void(int, rclcpp::Duration)> overrun_cb_;
-  FILE * log_file_;
-
-  rclcpp::Duration max_perf_time_;
-  rclcpp::Duration min_perf_time_;
-
-  uint32_t iter_cnt_;
-  rclcpp::Time start_perf_time_;
-  rclcpp::Time stop_perf_time_;
-  rclcpp::Duration perf_time_;
+struct RtmCallback {
+  std::string id_;
+  std::function<void(uint32_t, rclcpp::Duration)> overrun_cb_;
+  uint64_t perf_ns_;
+  uint64_t jitter_ns_;
 };
 
 struct RtmPerfMetric {
@@ -51,6 +36,18 @@ struct RtmPerfMetric {
   uint64_t start_ns_;
   uint64_t stop_ns_;
   uint64_t dur_ns_;
+};
+
+class RtmData
+{
+public:
+  RtmData() {}
+  ~RtmData() {}
+
+  std::string event_id_;
+  FILE * log_file_;
+  RtmCallback * cb_;
+  RtmPerfMetric * perf_;
 };
 
 }  // namespace rtmonitor

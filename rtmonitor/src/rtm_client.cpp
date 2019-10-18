@@ -22,17 +22,77 @@ namespace rtmonitor
 
 RtmClient::RtmClient(rclcpp::Node::SharedPtr node)
 {
+  create_client_perfmetric(node);
   create_client_looptime(node);
   create_client_elapsed(node);
 }
 
 RtmClient::RtmClient(rclcpp_lifecycle::LifecycleNode::SharedPtr lc_node)
 {
+  lc_create_client_perfmetric(lc_node);
+  lc_create_client_elapsed(lc_node);
   lc_create_client_elapsed(lc_node);
 }
 
 RtmClient::~RtmClient()
 {
+}
+
+bool RtmClient::create_client_perfmetric(rclcpp::Node::SharedPtr node)
+{
+  perf_metric_client_ = node->create_client<rtmonitor_msgs::srv::ReqPerfMetric>("perf_metric");
+
+  while (!perf_metric_client_->wait_for_service(std::chrono::seconds(1))) {
+    if (!rclcpp::ok()) {
+      RCLCPP_ERROR(node->get_logger(), "client interrupted while waiting for service to appear.");
+      return false;
+    }
+    RCLCPP_INFO(node->get_logger(), "waiting for service to appear...");
+  }
+
+  return true;
+}
+
+bool RtmClient::lc_create_client_perfmetric(rclcpp_lifecycle::LifecycleNode::SharedPtr lc_node)
+{
+  perf_metric_client_ = lc_node->create_client<rtmonitor_msgs::srv::ReqPerfMetric>("perf_metric");
+
+  while (!perf_metric_client_->wait_for_service(std::chrono::seconds(1))) {
+    if (!rclcpp::ok()) {
+      RCLCPP_ERROR(lc_node->get_logger(),
+        "client interrupted while waiting for service to appear.");
+      return false;
+    }
+    RCLCPP_INFO(lc_node->get_logger(), "waiting for service to appear...");
+  }
+
+  return true;
+}
+
+bool RtmClient::request_perfmetric(RtmPerfMetric * perf)
+{
+  auto request = std::make_shared<rtmonitor_msgs::srv::ReqPerfMetric::Request>();
+  // request->req.header.stamp = now();
+  request->req.id = perf->id_;
+  request->req.iter_cnt = perf->iter_cnt_;
+  request->req.dur_ns = perf->dur_ns_;
+
+  auto result_future = perf_metric_client_->async_send_request(request);
+
+#if 0
+  if (rclcpp::spin_until_future_complete(node, result_future) !=
+    rclcpp::executor::FutureReturnCode::SUCCESS)
+  {
+    RCLCPP_ERROR(node->get_logger(), "service call failed :(");
+    return 1;
+  }
+
+  auto result = result_future.get();
+  RCLCPP_INFO(node->get_logger(), "result of %" PRId64 " + %" PRId64 " = %" PRId64,
+    request->a, request->b, result->sum);
+#endif
+
+  return true;
 }
 
 bool RtmClient::create_client_looptime(rclcpp::Node::SharedPtr node)
@@ -41,10 +101,27 @@ bool RtmClient::create_client_looptime(rclcpp::Node::SharedPtr node)
 
   while (!loop_time_client_->wait_for_service(std::chrono::seconds(1))) {
     if (!rclcpp::ok()) {
-      RCLCPP_ERROR(node->get_logger(), "client interrupted while waiting for service to appear.");
+      RCLCPP_ERROR(node->get_logger(),
+        "client interrupted while waiting for service to appear.");
       return false;
     }
     RCLCPP_INFO(node->get_logger(), "waiting for service to appear...");
+  }
+
+  return true;
+}
+
+bool RtmClient::lc_create_client_looptime(rclcpp_lifecycle::LifecycleNode::SharedPtr lc_node)
+{
+  loop_time_client_ = lc_node->create_client<rtmonitor_msgs::srv::ReqLoopTime>("loop_time");
+
+  while (!loop_time_client_->wait_for_service(std::chrono::seconds(1))) {
+    if (!rclcpp::ok()) {
+      RCLCPP_ERROR(lc_node->get_logger(),
+        "client interrupted while waiting for service to appear.");
+      return false;
+    }
+    RCLCPP_INFO(lc_node->get_logger(), "waiting for service to appear...");
   }
 
   return true;
@@ -58,8 +135,8 @@ bool RtmClient::request_looptime(RtmData * rtd)
   request->req.pub = true;
   request->req.rate = 0;
   request->req.jitter = 0;
-  request->req.iteration = rtd->iter_cnt_;
-  request->req.looptime = rtd->perf_time_.nanoseconds();
+  request->req.iteration = rtd->perf_->iter_cnt_;
+  request->req.looptime = rtd->perf_->dur_ns_;
 
   auto result_future = loop_time_client_->async_send_request(request);
 
