@@ -109,6 +109,11 @@ bool RealTimeMonitor::register_callback(
   rtd->cb_->perf_ns_ = exp_perf_ns.nanoseconds();
   rtd->cb_->jitter_ns_ = exp_jitter_ns.nanoseconds();
 
+  if (rtd->log_file_) {
+    fprintf(rtd->log_file_, "Expected Metric value: %ld\n", rtd->cb_->perf_ns_);
+    fprintf(rtd->log_file_, "Acceptable Jitter value: %ld\n", rtd->cb_->jitter_ns_);
+  }
+
   return true;
 }
 
@@ -143,7 +148,10 @@ bool RealTimeMonitor::add_metrics(std::string id)
   rtd->log_file_ = fopen(filename.c_str(), "w");
   if (rtd->log_file_ == NULL) {
     printf("Error: Could not open log file");
+    return false;
   }
+
+  fprintf(rtd->log_file_, "RTMonitor Performance Metric: %s\n", id.c_str());
 
   rtd->perf_ = new RtmPerfMetric();
   rtd->perf_->id_ = id;
