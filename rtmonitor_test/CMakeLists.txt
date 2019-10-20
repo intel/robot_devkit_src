@@ -84,18 +84,6 @@ ament_target_dependencies(test_publish_metric2
   ${dependencies}
 )
 
-#[[
-add_executable(test_ros2_comm
-  src/test_ros2_comm/main.cpp)
-
-ament_target_dependencies(test_ros2_comm
-  "rclcpp"
-  "rclcpp_lifecycle"
-  "rtmonitor"
-  "rtmonitor_msgs"
-  "std_msgs")
-]]
-
 install(TARGETS
   test_rtmonitor
   test_looptime
@@ -105,7 +93,6 @@ install(TARGETS
   test_publish_metric
   test_publish_metric2
 
-#  test_ros2_comm
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
