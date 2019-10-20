@@ -33,7 +33,7 @@ namespace rtmonitor
 {
 
 /**
- *  The RealTimeMonitor class is used to measure real-time performance metrics of a software.
+ *  The RealTimeMonitor class is used to measure real-time performance metrics of a ROS2 software.
  */
 
 class RealTimeMonitor
@@ -46,6 +46,7 @@ public:
    *  Initialize with ROS2 node pointer.
    *
    *  @param[in] node ROS2 node pointer.
+   *  @param[in] pub_metric True to publish data to ros2 topic else false.
    *
    *  @return Status of request.
    */
@@ -55,6 +56,7 @@ public:
    *  Initialize with ROS2 lifecycle node pointer.
    *
    *  @param[in] lc_node ROS2 lifecycle node pointer.
+   *  @param[in] pub_metric True to publish data to ros2 topic else false.
    *
    *  @return Status of request.
    */
@@ -72,7 +74,7 @@ public:
   /**
    *  Register to receive callback on missed deadlines.
    *
-   *  @param[in] id Identifier.
+   *  @param[in] id Identifier of the metric.
    *  @param[in] exp_perf_ns Expected duration of the metric in nanosec.
    *  @param[in] exp_jitter_ns Deviation acceptable in nanosec.
    *  @param[in] cb Callback to be called on missed deadlines.
@@ -87,7 +89,7 @@ public:
   /**
    *  Deregister to stop receiving callback on missed deadlines.
    *
-   *  @param[in] id Identifier.
+   *  @param[in] id Identifier of the metric.
    *
    *  @return Status of request.
    */
@@ -96,8 +98,8 @@ public:
   /**
    *  Calculate Looptime.
    *
-   *  @param[in] id Identifier.
-   *  @param[in] now Current Time.
+   *  @param[in] id Identifier of the metric.
+   *  @param[in] now Current ROS2 Time.
    *
    *  @return Looptime in rclcpp::Duration.
    */
@@ -106,9 +108,9 @@ public:
   /**
    *  Calculate Message Latency.
    *
-   *  @param[in] id Identifier.
+   *  @param[in] id Identifier of the metric.
    *  @param[in] time Timestamp in message header.
-   *  @param[in] now Current Time.
+   *  @param[in] now Current ROS2 Time.
    *
    *  @return Latency in rclcpp::Duration.
    */
@@ -119,9 +121,9 @@ public:
   /**
    *  Calculate time elapsed between two point.
    *
-   *  @param[in] id Identifier.
+   *  @param[in] id Identifier of the metric.
    *  @param[in] is_start Flag to specify if start point or end point.
-   *  @param[in] now Current Time.
+   *  @param[in] now Current ROS2 Time.
    *
    *  @return Elapsed time in rclcpp::Duration.
    */
@@ -130,9 +132,9 @@ public:
   /**
    *  Calculate time elapsed between two point in different processes.
    *
-   *  @param[in] id Identifier.
+   *  @param[in] id Identifier of the metric.
    *  @param[in] is_start Flag to specify if start point or end point.
-   *  @param[in] now Current Time.
+   *  @param[in] now Current ROS2 Time.
    *
    *  @return Status of request.
    */
