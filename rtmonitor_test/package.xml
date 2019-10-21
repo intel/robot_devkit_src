@@ -2,10 +2,11 @@
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
   <name>rtmonitor_test</name>
-  <version>0.0.1</version>
-  <description>TODO: Package description</description>
-  <maintainer email="lalit.kumar.begani@intel.com">lkumarbe</maintainer>
-  <license>TODO: License declaration</license>
+  <version>1.0.0</version>
+  <description>Package with rtmonitor sample test applications</description>
+  <maintainer email="lalit.kumar.begani@intel.com">Lalit Begani</maintainer>
+  <license>Apache License 2.0</license>
+  <author email="lalit.kumar.begani@intel.com">Lalit Begani</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
