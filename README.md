@@ -2,12 +2,15 @@
 RTMonitor is a profiling tool built to monitor and capture real time performance metrics of ROS2 C++ Application.
 
 ## 1. Features
-* Simple APIs for code instrumentation
-* Measure performance metrics like looptime, latency, elapsed time etc
-* Notify application on missed deadlines
+* Simple APIs for code instrumentation.
+* Calculate & log performance metrics like looptime, latency, elapsed time etc.
+* Notify application on missed deadlines.
+* Scripts to create plot from logged data.
+* Publish the performance metrics data on ROS2 topic
 
 ## 2. Dependencies
-* ROS2
+* Ubuntu 18.04
+* ROS2 Dashing
 
 ## 3. Getting Started
 ### 3.1 Fetch
@@ -67,11 +70,36 @@ ament_target_dependencies(<target>
 
 ```
 ### 4.2 Instrumenting code
-`rtmonitor` requires explicit code instrumentation. The library provides APIs to initialize and calculate metrics
+`rtmonitor` requires explicit code instrumentation. The library provides APIs to initialize and calculate metrics. The timing data of each metric is captured separately in a different files.
 #### 4.2.1 Initialize
-The real-time events (update loop, message pub/sub, function time) that are to be monitored and logged will first need to be registered and initialized. A unique string is used as an identifier for that particular event. The timing metrics of each event is captured separately in a different files.
+`rtmonitor` requires initialization by ROS2 application for two conditions where -
+* App needs to calculate elapsed time between events not in a single process. This means using `calc_elapsed_g` API.
+* App needs to publish the performance metric data on ROS2 topic.
 
-Example : [test_looptime.cpp](rtmonitor_test/src/test_looptime.cpp#L38)
+For conditions other than the two mentioned above, initialization is not required. The metrics will get registered implicitly on any first call with identifier.
+
+Example : [test_publish_metric.cpp](rtmonitor_test/src/test_publish_metric.cpp#L30)
+```cpp
+  explicit Producer(const std::string & topic_name)
+  : Node("producer")
+  {
+    rclcpp::QoS qos(rclcpp::KeepLast(7));
+    pub_ = this->create_publisher<std_msgs::msg::String>(topic_name, qos);
+
+    timer_ = this->create_wall_timer(100ms, std::bind(&Producer::produce_message, this));
+  }
+  ~Producer() {}
+  void init()
+  {
+    rtm_.init(shared_from_this());
+  }
+
+```
+
+#### 4.2.2 Register callback
+It is possible to receive callback for a metric, whenever a deadline is missed. App can set the expected duration for the metric and acceptable jitter. Any deviation more than the acceptable jitter will invoke the callback.
+
+Example: [test_elapsed.cpp](rtmonitor_test/src/test_elapsed.cpp#49)
 ```cpp
   explicit Producer(const std::string & topic_name)
   : Node("producer")
@@ -81,31 +109,21 @@ Example : [test_looptime.cpp](rtmonitor_test/src/test_looptime.cpp#L38)
 
     timer_ = this->create_wall_timer(100ms, std::bind(&Producer::produce_message, this));
 
-    /* Initialize & Register callback*/
-    rtm_.init("producer", 10 /*rate*/, 5 /*margin %age*/,
+    uint64_t exp_perf_ns = ACCEPTABLE_DURATION;
+    uint64_t exp_jitter_ns = (exp_perf_ns/100)*JITTER_PERCENT;
+
+    rtm_.register_callback(
+      "producer", rclcpp::Duration(exp_perf_ns), rclcpp::Duration(exp_jitter_ns),
       std::bind(&Producer::cbLooptimeOverrun, this,
       std::placeholders::_1, std::placeholders::_2));
   }
+
 ```
-It is possible to initialize without registering callback if not required. In this case, timing metric will be logged but no notification will be issued when deadlines missed
 
-Example : [test_latency.cpp](rtmonitor_test/src/test_latency.cpp#L64)
-```cpp
-  explicit Consumer(const std::string & topic_name)
-  : Node("consumer")
-  {
-    sub_ =
-      create_subscription<rtmonitor_msgs::msg::LoopTime>(topic_name, 10,
-        std::bind(&Consumer::consume_message, this, std::placeholders::_1));
+#### 4.2.3 Calculate metrics
+To calculate and log the timing metrics, specific APIs along with string identifier needs to be called. Metrics will get registered on the first call to calculate metrics.
 
-    /* Initialize */
-    rtm_.init("msg_lat");
-  }
-```
-#### 4.2.2 Calculate metrics
-To calculate and log the timing metrics, specific APIs along with string identifier needs to be called
-
-##### 4.2.2.1 Loop Time
+##### 4.2.3.1 Loop Time
 For an event happening periodically in a loop, looptime is the time period between two successive occurence of such event. `rtmonitor` can measure looptime and provide metrics to evaluate the jitter. Also, it is possible for the application to request for a callback from `rtmonitor` whenever jitter is beyond acceptable margin and deadline is missed.
 
 Example: [test_looptime.cpp](rtmonitor_test/src/test_looptime.cpp)
@@ -119,7 +137,7 @@ Example: [test_looptime.cpp](rtmonitor_test/src/test_looptime.cpp)
 
 ```
 
-##### 4.2.2.2 ROS2 Message Latency
+##### 4.2.3.2 ROS2 Message Latency
 There is a latency between ROS2 message published and when a callback is received on the subscriber side. `rtmonitor` can calculate this latency as difference of the timestamp on the message header and the time when message is received by the subscriber.
 
 Example: [test_latency.cpp](rtmonitor_test/src/test_latency.cpp)
@@ -133,7 +151,7 @@ Example: [test_latency.cpp](rtmonitor_test/src/test_latency.cpp)
 
 ```
 
-##### 4.2.2.3 Elapsed Time
+##### 4.2.3.3 Elapsed Time
 Elapsed time is the time it takes to get from one specified point in code to another.
 
 Example: [test_elapsed.cpp](rtmonitor_test/src/test_elapsed.cpp)
@@ -148,9 +166,30 @@ Example: [test_elapsed.cpp](rtmonitor_test/src/test_elapsed.cpp)
   }
 
 ```
+##### 4.2.3.4 Elapsed Time Global
+Elapsed time global is the time difference between two points in the code, where the two points can be within a single process or different process. The time information along with metric identifier is posted to a global ROS2 service running.
+ROS2 service calculates the elapsed time and logs the data in `/tmp/log_rtm_service.txt`. Before using `calc_elapsed_g`, initialization of `rtmonitor` is required.
+
+Example: [test_elapsed_global.cpp](rtmonitor_test/src/test_elapsed_global.cpp#L59)
+```cpp
+  void produce_message()
+  {
+    // Measure looptime
+    rtm_.calc_looptime("producer", this->now());
+    rtm_.calc_elapsed_g("produce_message", true, this->now());
+    do_something_intensive();
+    std_msgs::msg::String::UniquePtr msg(new std_msgs::msg::String());
+    msg->data = "RT Message: " + std::to_string(count_++);
+    RCLCPP_INFO(this->get_logger(), "Producer: [%s]", msg->data.c_str());
+    pub_->publish(std::move(msg));
+    rtm_.calc_elapsed_g("produce_message", false, this->now());
+  }
+
+```
 
 ### 4.3 Collecting Data
-All the timing metrics generated is saved in a log file in the /tmp directory. The naming convention of the log file is log_<string-id>.txt . A separate log file is generated for every event initialized.
+All the timing metrics generated is saved in a log file in the /tmp directory. The naming convention of the log file is log_<string-id>.txt.
+A separate log file is generated for every metric. But for all the metrics calculated using `calc_elapsed_g`, there is a single file `/tmp/log_rtm_service.txt`
 
 ### 4.4 Analyzing Data
 The timing metrics can be analyzed by post-processing the log files generated to create a plot out of it. This can be done by a python script [plot_bar.py](rtmonitor_tools/plot_bar.py) provided
