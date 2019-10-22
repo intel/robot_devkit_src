@@ -11,6 +11,7 @@ RTMonitor is a profiling tool built to monitor and capture real time performance
 ## 2. Dependencies
 * Ubuntu 18.04
 * ROS2 Dashing
+
 To create plots from log files
 * Python3
 * Matplotlib
