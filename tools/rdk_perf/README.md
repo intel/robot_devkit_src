@@ -22,6 +22,10 @@
   ```
   ros2 launch rdk_perf hz.launch.py
   ```
+  Show result in rqt_plot  
+  
+  ![pic](https://github.com/intel/robot_devkit_src/blob/master/tools/rdk_perf/doc/rqt_plot.png)
+  
 * <span id="jump">Parameters in launch file</span>
   * monitored_node  
     The node name need to be monitored
