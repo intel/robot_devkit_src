@@ -20,11 +20,24 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='rdk_perf', 
             node_executable='hz',
+            node_name='instance1',
             parameters=[{'monitored_node':'camera'},
                         {'monitored_topic':'/camera/color/image_raw'},
                         {'window_size':'10000'}],
-            remappings=[('/hz','/perf/hz')],
+            remappings=[('/hz','/perf/hz1')],
             output='screen'),
+# Support multiple topics monitoring. 
+# Add other nodes as follows with different node_name and output topic name.
+
+#        launch_ros.actions.Node(
+#            package='rdk_perf', 
+#            node_executable='hz',
+#            node_name='instance2',
+#            parameters=[{'monitored_node':'camera'},
+#                        {'monitored_topic':'/camera/infra1/image_rect_raw'},
+#                        {'window_size':'10000'}],
+#            remappings=[('/hz','/perf/hz2')],
+#            output='screen'),
         launch_ros.actions.Node(
             package='rqt_plot', 
             node_executable='rqt_plot',
